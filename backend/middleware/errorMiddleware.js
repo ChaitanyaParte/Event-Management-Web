@@ -16,6 +16,12 @@ const errorHandler = (err, req, res, next) => {
   if (err.code === '22P02' || err.code === '22007') {
     return res.status(400).json({ message: 'One of the values is not in a valid format.' });
   }
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ message: 'The image must be 3 MB or smaller.' });
+  }
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ message: 'Upload one image file.' });
+  }
   if (err.code === 'P0001') {
     return res.status(400).json({ message: err.message });
   }

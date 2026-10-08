@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Award, Briefcase, CalendarCheck, CalendarPlus, GraduationCap, Ticket, UserPlus } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Link } from 'react-router-dom';
 import PageTitle from '../../components/PageTitle';
-import { Card, EmptyState } from '../../components/ui';
+import { Card, EmptyState, Notice } from '../../components/ui';
 import { useRoleApi } from '../../hooks/useRoleApi';
 import { useTheme } from '../../context/ThemeContext';
 import { formatDate } from '../../lib/api';
@@ -59,6 +60,14 @@ export default function Dashboard() {
   return (
     <>
       <PageTitle title="Dashboard" subtitle="Overview of your college event system." />
+
+      {Number(stats.pending_events) > 0 && (
+        <div className="mb-4">
+          <Notice>
+            {stats.pending_events} {Number(stats.pending_events) === 1 ? 'event is' : 'events are'} waiting for your approval. <Link to="/admin/events" className="font-semibold underline">Review now</Link>
+          </Notice>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {tiles.map(({ label, value, icon: Icon }) => (

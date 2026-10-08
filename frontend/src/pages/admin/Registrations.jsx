@@ -45,7 +45,7 @@ export default function Registrations() {
       <div className="my-4 flex flex-wrap gap-3">
         <Input className="max-w-xs" placeholder="Search student or event" value={search} onChange={(e) => setSearch(e.target.value)} />
         <Select className="max-w-[10rem]" value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">All statuses</option>
+          <option value="">Any status</option>
           <option>Registered</option>
           <option>Cancelled</option>
         </Select>

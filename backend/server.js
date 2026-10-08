@@ -12,8 +12,10 @@ const organizerRoutes = require('./routes/organizerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
+const requirementRoutes = require('./routes/requirementRoutes');
 const { errorHandler } = require('./middleware/errorMiddleware');
 const { startEventStatusSync } = require('./utils/eventStatus');
+const { uploadsRoot } = require('./utils/imageFiles');
 
 dotenv.config();
 
@@ -32,13 +34,16 @@ app.use('/api/organizers', organizerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/requirements', requirementRoutes);
+
+app.use('/uploads', express.static(uploadsRoot, { maxAge: '7d' }));
 
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 
 app.use(express.static(frontendDist));
 
 app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
   res.sendFile(path.join(frontendDist, 'index.html'), (error) => {
     if (error) {
       res.status(503).send('The frontend has not been built yet. Run "npm run build" in the backend folder, then refresh.');

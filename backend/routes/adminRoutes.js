@@ -22,6 +22,7 @@ const {
   getEventById,
   updateEvent,
   cancelEvent,
+  reviewEvent,
   deleteEvent,
   getAllCategories,
   createCategory,
@@ -85,6 +86,7 @@ router.get('/events', getAllEvents);
 router.get('/events/:id', getEventById);
 router.put('/events/:id', updateEvent);
 router.put('/events/:id/cancel', cancelEvent);
+router.put('/events/:id/review', reviewEvent);
 router.delete('/events/:id', deleteEvent);
 
 // ============================================

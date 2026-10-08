@@ -1,5 +1,7 @@
 const { pool } = require('../config/db');
 const bcrypt = require('bcrypt');
+const { removeEventImage } = require('../utils/imageFiles');
+const { REQUIREMENTS_COLUMN } = require('../utils/eventQueries');
 
 // ============================================
 // DASHBOARD & STATISTICS
@@ -11,11 +13,12 @@ const getAdminStats = async (req, res, next) => {
       SELECT
         (SELECT COUNT(*) FROM Students) AS total_students,
         (SELECT COUNT(*) FROM Organizers) AS total_organizers,
-        (SELECT COUNT(*) FROM Events) AS total_events,
+        (SELECT COUNT(*) FROM Events WHERE approval_status = 'Approved') AS total_events,
+        (SELECT COUNT(*) FROM Events WHERE approval_status = 'Pending') AS pending_events,
         (SELECT COUNT(*) FROM Registrations WHERE status = 'Registered') AS total_registrations,
-        (SELECT COUNT(*) FROM Events WHERE status = 'Upcoming') AS upcoming_events,
-        (SELECT COUNT(*) FROM Events WHERE status = 'Ongoing') AS ongoing_events,
-        (SELECT COUNT(*) FROM Events WHERE status = 'Completed') AS completed_events,
+        (SELECT COUNT(*) FROM Events WHERE approval_status = 'Approved' AND status = 'Upcoming') AS upcoming_events,
+        (SELECT COUNT(*) FROM Events WHERE approval_status = 'Approved' AND status = 'Ongoing') AS ongoing_events,
+        (SELECT COUNT(*) FROM Events WHERE approval_status = 'Approved' AND status = 'Completed') AS completed_events,
         (SELECT COUNT(*) FROM Certificates) AS total_certificates
     `;
     const { rows } = await pool.query(statsQuery);
@@ -74,7 +77,7 @@ const getCategoryChart = async (req, res, next) => {
     const query = `
       SELECT c.category_name, COUNT(e.event_id) AS count
       FROM Event_Categories c
-      LEFT JOIN Events e ON c.category_id = e.category_id
+      LEFT JOIN Events e ON c.category_id = e.category_id AND e.approval_status = 'Approved'
       GROUP BY c.category_id, c.category_name
       ORDER BY count DESC
     `;
@@ -91,6 +94,7 @@ const getPopularEvents = async (req, res, next) => {
       SELECT e.event_id, e.title, COUNT(r.registration_id) AS registrations
       FROM Events e
       LEFT JOIN Registrations r ON e.event_id = r.event_id AND r.status = 'Registered'
+      WHERE e.approval_status = 'Approved'
       GROUP BY e.event_id, e.title
       ORDER BY registrations DESC
       LIMIT 10
@@ -372,7 +376,7 @@ const deleteOrganizer = async (req, res, next) => {
 const getAllEvents = async (req, res, next) => {
   try {
     const query = `
-      SELECT e.event_id, e.title, e.venue, e.event_date, e.start_time, e.end_time, e.seat_limit, e.status,
+      SELECT e.event_id, e.title, e.venue, e.event_date, e.start_time, e.end_time, e.seat_limit, e.status, e.image_url, e.approval_status, e.review_note,
              c.category_name, c.category_id,
              o.full_name AS organizer_name, o.organizer_id,
              COALESCE(r.registered_count, 0) AS registered_count,
@@ -386,7 +390,7 @@ const getAllEvents = async (req, res, next) => {
         WHERE status = 'Registered'
         GROUP BY event_id
       ) r ON e.event_id = r.event_id
-      ORDER BY e.event_date DESC
+      ORDER BY (e.approval_status = 'Pending') DESC, e.event_date DESC
     `;
     const { rows } = await pool.query(query);
     res.json(rows);
@@ -404,10 +408,12 @@ const getEventById = async (req, res, next) => {
   try {
     const query = `
       SELECT e.event_id, e.title, e.description, e.venue, e.event_date, e.start_time, e.end_time, 
-             e.seat_limit, e.status, e.category_id, e.organizer_id,
+             e.seat_limit, e.status, e.category_id, e.organizer_id, e.image_url,
+             e.approval_status, e.review_note, e.reviewed_at, e.requirements_notes,
              c.category_name,
-             o.full_name AS organizer_name,
-             COALESCE(r.registered_count, 0) AS registered_count
+             o.full_name AS organizer_name, o.email AS organizer_email,
+             COALESCE(r.registered_count, 0) AS registered_count,
+             ${REQUIREMENTS_COLUMN}
       FROM Events e
       JOIN Event_Categories c ON e.category_id = c.category_id
       JOIN Organizers o ON e.organizer_id = o.organizer_id
@@ -464,6 +470,38 @@ const updateEvent = async (req, res, next) => {
   }
 };
 
+const reviewEvent = async (req, res, next) => {
+  const eventId = parseInt(req.params.id, 10);
+  const { decision } = req.body;
+  const note = typeof req.body.note === 'string' ? req.body.note.trim() : '';
+
+  if (Number.isNaN(eventId)) {
+    return res.status(400).json({ message: 'Invalid event ID.' });
+  }
+  if (!['approve', 'reject'].includes(decision)) {
+    return res.status(400).json({ message: 'Decision must be approve or reject.' });
+  }
+  if (decision === 'reject' && !note) {
+    return res.status(400).json({ message: 'Give a reason so the organizer knows what to fix.' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `UPDATE Events
+       SET approval_status = $1, review_note = $2, reviewed_by = $3, reviewed_at = CURRENT_TIMESTAMP
+       WHERE event_id = $4 AND approval_status = 'Pending'
+       RETURNING event_id, title, approval_status`,
+      [decision === 'approve' ? 'Approved' : 'Rejected', note || null, req.user.id, eventId],
+    );
+    if (!rows[0]) {
+      return res.status(404).json({ message: 'This event is not waiting for approval.' });
+    }
+    res.json({ message: decision === 'approve' ? 'Event approved.' : 'Event rejected.', event: rows[0] });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const cancelEvent = async (req, res, next) => {
   const eventId = parseInt(req.params.id, 10);
   if (Number.isNaN(eventId)) {
@@ -494,10 +532,11 @@ const deleteEvent = async (req, res, next) => {
   }
 
   try {
-    const { rows } = await pool.query('DELETE FROM Events WHERE event_id = $1 RETURNING event_id', [eventId]);
+    const { rows } = await pool.query('DELETE FROM Events WHERE event_id = $1 RETURNING event_id, image_url', [eventId]);
     if (!rows[0]) {
       return res.status(404).json({ message: 'Event not found.' });
     }
+    removeEventImage(rows[0].image_url);
     res.json({ message: 'Event deleted successfully.' });
   } catch (error) {
     next(error);
@@ -1012,6 +1051,7 @@ module.exports = {
   getEventById,
   updateEvent,
   cancelEvent,
+  reviewEvent,
   deleteEvent,
   // Categories
   getAllCategories,

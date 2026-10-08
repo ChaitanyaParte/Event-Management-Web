@@ -4,14 +4,14 @@ import EventForm from '../../components/EventForm';
 import PageTitle from '../../components/PageTitle';
 import { Badge, Button, Card, Dialog, EmptyState, Input, Notice, Select, Table, Td, Th } from '../../components/ui';
 import { useRoleApi } from '../../hooks/useRoleApi';
-import { api, formatDate, formatTime, toDateInput, toTimeInput } from '../../lib/api';
-import { userId } from '../../lib/auth';
+import { api, formatDate, formatTime, saveEventImage, toDateInput, toTimeInput } from '../../lib/api';
 
 export default function ManageEvents() {
   const call = useRoleApi('organizer');
   const location = useLocation();
   const [events, setEvents] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [requirementItems, setRequirementItems] = useState([]);
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -20,29 +20,35 @@ export default function ManageEvents() {
 
   const load = useCallback(async () => {
     try {
-      const all = await api('/events');
-      setEvents(all.filter((event) => event.organizer_id === userId('organizer')));
+      setEvents(await call('/events/mine'));
     } catch (err) {
       setError(err.message);
     }
-  }, []);
+  }, [call]);
 
   useEffect(() => {
     load();
     api('/categories').then(setCategories).catch(() => {});
+    api('/requirements').then(setRequirementItems).catch(() => {});
   }, [load]);
 
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (events || []).filter(
-      (event) => (!term || event.title.toLowerCase().includes(term)) && (!statusFilter || event.status === statusFilter),
+      (event) => (!term || event.title.toLowerCase().includes(term)) && (!statusFilter || (statusFilter === 'Pending' || statusFilter === 'Rejected' ? event.approval_status === statusFilter : event.status === statusFilter)),
     );
   }, [events, search, statusFilter]);
 
-  const save = async (payload) => {
+  const save = async (payload, image) => {
     await call(`/events/${editing.event_id}`, { method: 'PUT', body: payload });
+    let message = editing.approval_status === 'Rejected' ? 'Event updated and sent back to the admin for approval.' : 'Event updated.';
+    try {
+      await saveEventImage(call, editing.event_id, image);
+    } catch (err) {
+      message = `Event saved, but the image could not be saved: ${err.message}`;
+    }
     setEditing(null);
-    setNotice('Event updated.');
+    setNotice(message);
     await load();
   };
 
@@ -72,8 +78,8 @@ export default function ManageEvents() {
       <div className="my-4 flex flex-wrap gap-3">
         <Input className="max-w-xs" placeholder="Search by title" value={search} onChange={(event) => setSearch(event.target.value)} />
         <Select className="max-w-[10rem]" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="">All statuses</option>
-          {['Upcoming', 'Ongoing', 'Completed', 'Cancelled'].map((status) => <option key={status}>{status}</option>)}
+          <option value="">Any status</option>
+          {['Pending', 'Rejected', 'Upcoming', 'Ongoing', 'Completed', 'Cancelled'].map((status) => <option key={status}>{status}</option>)}
         </Select>
       </div>
 
@@ -85,21 +91,28 @@ export default function ManageEvents() {
         <Card>
           <Table>
             <thead>
-              <tr><Th>Event</Th><Th>When</Th><Th>Venue</Th><Th>Registered</Th><Th>Status</Th><Th className="text-right">Actions</Th></tr>
+              <tr><Th>Event</Th><Th>When</Th><Th>Venue</Th><Th>Registered</Th><Th>Approval</Th><Th>Status</Th><Th className="text-right">Actions</Th></tr>
             </thead>
             <tbody>
               {visible.map((event) => {
-                const open = event.status === 'Upcoming' || event.status === 'Ongoing';
+                const approved = event.approval_status === 'Approved';
+                const open = approved && (event.status === 'Upcoming' || event.status === 'Ongoing');
                 return (
                   <tr key={event.event_id}>
                     <Td className="font-medium">{event.title}</Td>
                     <Td>{formatDate(event.event_date)}<span className="text-zinc-500"> &middot; {formatTime(event.start_time)}</span></Td>
                     <Td>{event.venue}</Td>
                     <Td>{event.registered_count} / {event.seat_limit}</Td>
-                    <Td><Badge value={event.status} /></Td>
+                    <Td>
+                      <Badge value={event.approval_status} />
+                      {event.approval_status === 'Rejected' && event.review_note && (
+                        <p className="mt-1 max-w-[14rem] text-xs text-red-700">Admin: {event.review_note}</p>
+                      )}
+                    </Td>
+                    <Td>{approved ? <Badge value={event.status} /> : <span className="text-zinc-400">-</span>}</Td>
                     <Td>
                       <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" onClick={() => setEditing(event)}>Edit</Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditing(event)}>{event.approval_status === 'Rejected' ? 'Fix and resubmit' : 'Edit'}</Button>
                         {open && <Button size="sm" variant="ghost" onClick={() => cancelEvent(event)}>Cancel event</Button>}
                       </div>
                     </Td>
@@ -116,11 +129,13 @@ export default function ManageEvents() {
           <EventForm
             key={editing.event_id}
             categories={categories}
-            showStatus
+            requirementItems={requirementItems}
+            showStatus={editing.approval_status === 'Approved'}
             minSeats={Math.max(1, Number(editing.registered_count || 0))}
-            submitLabel="Save changes"
+            submitLabel={editing.approval_status === 'Rejected' ? 'Resubmit for approval' : 'Save changes'}
             onCancel={() => setEditing(null)}
             onSubmit={save}
+            currentImage={editing.image_url}
             initial={{
               title: editing.title,
               description: editing.description || '',
@@ -131,6 +146,9 @@ export default function ManageEvents() {
               end_time: toTimeInput(editing.end_time),
               seat_limit: String(editing.seat_limit),
               status: editing.status,
+              requirements: (editing.requirements || []).map((item) => item.item_id),
+              requirements_notes: editing.requirements_notes || '',
+              no_requirements: (editing.requirements || []).length === 0,
             }}
           />
         )}

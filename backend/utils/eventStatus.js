@@ -5,11 +5,11 @@ const { pool } = require('../config/db');
 const syncEventStatuses = async () => {
   const completed = await pool.query(
     `UPDATE Events SET status = 'Completed'
-     WHERE status IN ('Upcoming', 'Ongoing') AND (event_date + end_time) <= LOCALTIMESTAMP`,
+     WHERE approval_status = 'Approved' AND status IN ('Upcoming', 'Ongoing') AND (event_date + end_time) <= LOCALTIMESTAMP`,
   );
   const ongoing = await pool.query(
     `UPDATE Events SET status = 'Ongoing'
-     WHERE status = 'Upcoming' AND (event_date + start_time) <= LOCALTIMESTAMP`,
+     WHERE approval_status = 'Approved' AND status = 'Upcoming' AND (event_date + start_time) <= LOCALTIMESTAMP`,
   );
   return { completed: completed.rowCount, ongoing: ongoing.rowCount };
 };

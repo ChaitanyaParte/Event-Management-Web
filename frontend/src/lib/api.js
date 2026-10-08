@@ -1,14 +1,15 @@
 import { getToken } from './auth';
 
 export async function api(path, { method = 'GET', body, role } = {}) {
-  const headers = { 'Content-Type': 'application/json' };
+  const isUpload = body instanceof FormData;
+  const headers = isUpload ? {} : { 'Content-Type': 'application/json' };
   const token = role ? getToken(role) : null;
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const response = await fetch(`/api${path}`, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: isUpload ? body : body ? JSON.stringify(body) : undefined,
   });
 
   let data = null;
@@ -45,3 +46,14 @@ export const formatTime = (value) => {
   date.setHours(Number(hours), Number(minutes));
   return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 };
+
+// Uploads, replaces or removes an event banner after the event itself has been saved.
+export async function saveEventImage(call, eventId, { file, remove }) {
+  if (file) {
+    const form = new FormData();
+    form.append('image', file);
+    await call(`/events/${eventId}/image`, { method: 'POST', body: form });
+  } else if (remove) {
+    await call(`/events/${eventId}/image`, { method: 'DELETE' });
+  }
+}

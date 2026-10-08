@@ -4,6 +4,7 @@ import { AuthCard, Field, RoleTabs } from '../components/AuthShell';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { dashboardPath } from '../lib/auth';
+import { useNextPath } from '../lib/redirect';
 
 export default function Login() {
   const [role, setRole] = useState('student');
@@ -12,6 +13,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { next, suffix } = useNextPath();
 
   const update = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
@@ -22,7 +24,7 @@ export default function Login() {
     try {
       const result = await api(`/auth/${role}/login`, { method: 'POST', body: form });
       login(role, result.token);
-      navigate(dashboardPath(role));
+      navigate(next && role === 'student' ? next : dashboardPath(role));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,7 +47,7 @@ export default function Login() {
           {busy ? 'Logging in...' : 'Log in'}
         </button>
         <p className="text-center text-sm">
-          New here? <Link to="/register" className="font-semibold underline">Create an account</Link>
+          New here? <Link to={`/register${suffix}`} className="font-semibold underline">Create an account</Link>
         </p>
       </form>
     </AuthCard>

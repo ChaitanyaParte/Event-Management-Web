@@ -23,7 +23,7 @@ const createRegistration = async (req, res, next) => {
       return res.status(404).json({ message: 'Student not found.' });
     }
 
-    const eventQuery = 'SELECT event_id, status, seat_limit FROM Events WHERE event_id = $1';
+    const eventQuery = 'SELECT event_id, status, seat_limit, approval_status FROM Events WHERE event_id = $1';
     const eventResult = await client.query(eventQuery, [event_id]);
     if (eventResult.rowCount === 0) {
       await client.query('ROLLBACK');
@@ -31,6 +31,10 @@ const createRegistration = async (req, res, next) => {
     }
 
     const event = eventResult.rows[0];
+    if (event.approval_status !== 'Approved') {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Event not found.' });
+    }
     if (event.status === 'Cancelled') {
       await client.query('ROLLBACK');
       return res.status(400).json({ message: 'Cannot register for a cancelled event.' });
