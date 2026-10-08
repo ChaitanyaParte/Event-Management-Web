@@ -1,81 +1,45 @@
 # CampusX Events — College Event Management System
 
-## Project Overview
-CampusX Events is a college event management system built around an already existing PostgreSQL database schema. The backend is Node.js with Express and the frontend uses vanilla HTML, CSS, and JavaScript.
+A full-stack college event management system. Students browse and register for events, organizers create events and take attendance, and admins manage everything and issue certificates.
 
 ## Features
-- Student authentication and event registration
-- Organizer event management and attendance marking
-- Admin dashboard, student/organizer/event/category management
-- Dynamic event listings, categories, registration history, attendance, and certificates
-- PostgreSQL-driven statistics, seat-limit calculation, and reporting
+- **Students:** browse upcoming events, register and cancel, see registration history, view and print certificates, edit profile.
+- **Organizers:** register (an admin must approve the account), create and edit events, mark attendance, issue certificates, edit profile.
+- **Admins:** dashboard with charts, manage students, organizers (approve), events, categories, registrations, attendance and certificates, reports with CSV export, profile and password change.
+- Role-based login with JWT. Each role keeps its own session, so you can be logged in as several roles at once.
 
-## Tech Stack
-- Frontend: HTML5, CSS3, JavaScript, Font Awesome
-- Backend: Node.js, Express.js, PostgreSQL, `pg`, `dotenv`, `bcrypt`, `cors`, JWT
-- Database: Existing PostgreSQL schema with tables and triggers already created
+## Tech stack
+- **Frontend:** React, Vite, Tailwind CSS, React Router, Recharts, lucide-react
+- **Backend:** Node.js, Express, `pg`, `bcrypt`, `jsonwebtoken`, `dotenv`, `cors`
+- **Database:** PostgreSQL
 
-## Existing PostgreSQL Database Structure
-The backend uses the following existing tables exactly as implemented in PostgreSQL:
-- `Admin`
-- `Students`
-- `Organizers`
-- `Event_Categories`
-- `Events`
-- `Registrations`
-- `Attendance`
-- `Certificates`
-
-### ENUM types
-- `event_status_enum` (`Upcoming`, `Ongoing`, `Completed`, `Cancelled`)
-- `registration_status_enum` (`Registered`, `Cancelled`)
-- `attendance_status_enum` (`Present`, `Absent`)
-
-## ER Relationships
-- `Admin` 1:M `Organizers`
-- `Admin` 1:M `Events`
-- `Organizer` 1:M `Events`
-- `Category` 1:M `Events`
-- `Student` 1:M `Registrations`
-- `Event` 1:M `Registrations`
-- `Registration` 1:0..1 `Attendance`
-- `Registration` 1:0..1 `Certificates`
-
-## Folder Structure
+## Folder structure
 ```
 college-event-management/
-├── backend/
+├── backend/            Express API (also serves the built frontend)
 │   ├── config/db.js
 │   ├── controllers/
 │   ├── middleware/
 │   ├── routes/
 │   ├── server.js
-│   ├── package.json
-│   └── .env
-├── frontend/
-│   ├── index.html
-│   ├── events.html
-│   ├── event-details.html
-│   ├── login.html
-│   ├── register.html
-│   ├── student/
-│   ├── organizer/
-│   ├── admin/
-│   └── assets/
-└── database/queries.sql
+│   └── .env            your local settings (not committed)
+├── frontend/           React app (Vite)
+│   └── src/
+├── database/
+│   ├── queries.sql                       example SQL queries for the DBMS concepts
+│   └── migration_organizer_approval.sql  run once, see Database setup
+└── unused/             the previous plain HTML frontend, kept for reference
 ```
 
-## Installation Requirements
-- Node.js 16+ or later
-- PostgreSQL running with the existing database already created
-- npm
+## Requirements
+- Node.js 18 or later
+- PostgreSQL, running, with the project's database and tables already created
 
-## PostgreSQL Database Setup
-1. Ensure PostgreSQL is running.
-2. Use your existing database and schema.
-3. Create a `.env` file with your PostgreSQL connection details.
+## Database setup
+1. Make sure PostgreSQL is running and your database exists with its tables.
+2. Run `database/migration_organizer_approval.sql` once. It lets `organizers.approved_by` be empty, which is how an organizer waits for admin approval.
+3. Copy `backend/.env.example` to `backend/.env` and fill in your values:
 
-## Environment Variables
 ```
 PORT=5000
 DB_USER=postgres
@@ -83,60 +47,72 @@ DB_HOST=localhost
 DB_NAME=your_database_name
 DB_PASSWORD=your_password
 DB_PORT=5432
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=a_long_random_string
 ```
 
-## How to Run Backend
-1. `cd backend`
-2. `npm install`
-3. `npm run dev`
+Never commit `backend/.env`. It is already in `.gitignore`.
 
-## How to Run Frontend
-Open the `frontend` files in a browser or use a simple local server.
+## Run the app
+From the `backend` folder:
 
-## API Documentation
-- `POST /api/auth/student/register`
-- `POST /api/auth/student/login`
-- `POST /api/auth/organizer/login`
-- `POST /api/auth/admin/login`
-- `GET /api/events`
-- `GET /api/events/:id`
-- `POST /api/events`
-- `PUT /api/events/:id`
-- `DELETE /api/events/:id`
-- `GET /api/categories`
-- `POST /api/categories`
-- `PUT /api/categories/:id`
-- `DELETE /api/categories/:id`
-- `POST /api/registrations`
-- `GET /api/registrations/student/:studentId`
-- `DELETE /api/registrations/:id`
-- `POST /api/attendance`
-- `GET /api/attendance/event/:eventId`
-- `GET /api/students/:id`
-- `PUT /api/students/:id`
-- `GET /api/organizers/:id`
-- `PUT /api/organizers/:id`
-- `GET /api/admin/stats`
-- `GET /api/admin/students`
-- `GET /api/admin/organizers`
-- `GET /api/admin/events`
-- `GET /api/admin/registrations`
+```
+npm install
+npm run build
+npm start
+```
 
-## Sample Login Credentials
-Use actual user records from your existing PostgreSQL database. The backend verifies credentials against the `Students`, `Organizers`, and `Admin` tables.
+Then open **http://localhost:5000**.
 
-## DBMS Concepts Demonstrated
-- Relational schema using foreign keys and ENUM types
-- Transaction handling for registration logic
-- Trigger-based seat-limit enforcement
-- Aggregation and joins for reporting
-- Referential integrity and cascade rules
+- `npm run build` installs the frontend packages and builds the React app. Run it once, and again whenever you change anything in `frontend/`.
+- `npm start` starts the API and serves the built app from the same address.
 
-## Transaction and Trigger Usage
-- Existing trigger `trg_check_seat_limit` prevents overbooking on `Registrations` inserts.
-- Backend validates seat availability before insert and uses transactions for safe registration.
+## Develop the frontend
+Run the backend (`npm start` in `backend`) and, in a second terminal:
 
-## Seat-Limit System
-Available seats are calculated using `Events.seat_limit` minus the count of `Registered` registrations.
-This is computed in SQL and displayed in the frontend, not stored as a separate column.
+```
+cd frontend
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173**. It reloads as you edit and sends `/api` requests to the backend on port 5000.
+
+## First-time use
+1. Register an **Admin** account on the Join in page.
+2. Register an **Organizer**. Their login stays blocked until an admin approves them under **Organizers → Approve**.
+3. As the organizer, create an event. Register a **Student** and sign up for it.
+4. As the organizer, open **Attendance**, mark the student present, and click **Issue certificates**. The student can then view and print the certificate.
+
+## Database structure
+Tables: `Admin`, `Students`, `Organizers`, `Event_Categories`, `Events`, `Registrations`, `Attendance`, `Certificates`.
+
+ENUM types: `event_status_enum` (Upcoming, Ongoing, Completed, Cancelled), `registration_status_enum` (Registered, Cancelled), `attendance_status_enum` (Present, Absent).
+
+Relationships:
+- Admin 1:M Organizers (approval) and Admin 1:M Events
+- Organizer 1:M Events, Category 1:M Events
+- Student 1:M Registrations, Event 1:M Registrations
+- Registration 1:0..1 Attendance, Registration 1:0..1 Certificates
+
+## DBMS concepts demonstrated
+- Relational schema with foreign keys, unique constraints, check constraints and ENUM types
+- Transactions for safe event registration
+- A trigger (`trg_check_seat_limit`) that prevents overbooking
+- Aggregation and joins for dashboards and reports
+- Referential integrity with cascade and restrict rules
+
+Available seats are calculated in SQL as the event's `seat_limit` minus the number of `Registered` registrations, so they are never stored separately.
+
+## API overview
+All routes are under `/api`. Protected routes need an `Authorization: Bearer <token>` header.
+
+| Area | Routes |
+|---|---|
+| Auth | `POST /auth/{student,organizer,admin}/register`, `POST /auth/{student,organizer,admin}/login` |
+| Events | `GET /events`, `GET /events/:id`, `POST /events`, `PUT /events/:id`, `DELETE /events/:id` |
+| Categories | `GET /categories` (admin manages through `/admin/categories`) |
+| Registrations | `POST /registrations`, `GET /registrations/student/:id`, `GET /registrations/event/:id`, `DELETE /registrations/:id` |
+| Attendance | `POST /attendance`, `GET /attendance/event/:id` |
+| Certificates | `POST /certificates/issue`, `GET /certificates/student/:id` |
+| Students and organizers | `GET`/`PUT /students/:id`, `GET`/`PUT /organizers/:id` |
+| Admin | `/admin/stats`, `/admin/students`, `/admin/organizers`, `/admin/events`, `/admin/categories`, `/admin/registrations`, `/admin/attendance`, `/admin/certificates`, `/admin/reports/*`, `/admin/profile` |

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" data-page="home">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusX Events</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <header class="container page-header">
+    <a href="index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="events.html">Events</a>
+      <a href="#categories">Categories</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="login.html">Login</a>
+      <a href="register.html" class="btn">Register</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <div class="hero-content">
+        <p class="section-subtitle">Campus event discovery made simple</p>
+        <h1 class="hero-title">Where Campus Events Come to Life</h1>
+        <p class="hero-text">Find college workshops, cultural activities, sports meets and more — all in one student-friendly platform.</p>
+        <div class="hero-card">
+          <h3>Search events</h3>
+          <form id="hero-search-form" class="form-grid">
+            <select name="eventType">
+              <option value="">All Types</option>
+              <option value="Technical">Technical</option>
+              <option value="Cultural">Cultural</option>
+              <option value="Sports">Sports</option>
+              <option value="Workshop">Workshop</option>
+            </select>
+            <input type="text" name="venue" placeholder="Venue" />
+            <input type="date" name="date" />
+            <input type="text" name="search" placeholder="Search events" />
+            <button class="btn" type="submit">Find Events</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="hero-card hero-card-spotlight">
+        <h2>Upcoming Events</h2>
+        <div id="upcoming-events" class="events-list"></div>
+      </div>
+    </section>
+
+    <section class="container" id="categories" style="padding: 3rem 0;">
+      <div class="section-header">
+        <div>
+          <h2>Event Categories</h2>
+          <p class="section-subtitle">Browse by what matters most to your college life.</p>
+        </div>
+      </div>
+      <div id="category-list" class="grid grid-3"></div>
+    </section>
+
+    <section class="container" id="how-it-works" style="padding: 3rem 0;">
+      <div class="section-header">
+        <div>
+          <h2>How It Works</h2>
+          <p class="section-subtitle">From discovery to attendance, CampusX keeps every step clear.</p>
+        </div>
+      </div>
+      <div class="grid grid-3">
+        <div class="card"><h3>1. Discover an event</h3><p class="form-note">Explore curated campus activities and pick what fits your interests.</p></div>
+        <div class="card"><h3>2. Register</h3><p class="form-note">Reserve your seat before the event fills up.</p></div>
+        <div class="card"><h3>3. Attend</h3><p class="form-note">Show up and be part of the campus community.</p></div>
+        <div class="card"><h3>4. Get your certificate</h3><p class="form-note">Earn proof of participation for eligible events.</p></div>
+      </div>
+    </section>
+
+    <section class="container" style="padding: 3rem 0;">
+      <div class="section-header">
+        <div>
+          <h2>CampusX Stats</h2>
+          <p class="section-subtitle">Real numbers powered by your PostgreSQL database.</p>
+        </div>
+      </div>
+      <div id="home-stats" class="grid stats-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-grid">
+      <div>
+        <h3>About CampusX Events</h3>
+        <p class="form-note">A student-centered platform for managing college events, registrations, attendance, and certificates.</p>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <a href="index.html">Home</a><br />
+        <a href="events.html">Events</a><br />
+        <a href="login.html">Login</a>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <p class="form-note">support@campusxevents.edu</p>
+        <div class="social-icons">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/scripts.js"></script>
+</body>
+</html>
