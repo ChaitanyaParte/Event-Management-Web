@@ -41,7 +41,7 @@ export default function Dashboard() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className={`${stat.color} rounded-xl border-2 border-ink p-5 shadow-[5px_5px_0_0_#111]`}>
+          <div key={stat.label} className={`${stat.color} rounded-xl border-2 border-ink p-5 shadow-[5px_5px_0_0_var(--color-ink)]`}>
             <p className="text-4xl font-bold">{stat.value}</p>
             <p className="mt-1 text-sm font-medium">{stat.label}</p>
           </div>

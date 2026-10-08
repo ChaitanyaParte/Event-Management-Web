@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CampusX Events</title>
+    <script>
+      try {
+        if (localStorage.getItem('campusx_theme') === 'dark') document.documentElement.classList.add('dark');
+      } catch (error) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

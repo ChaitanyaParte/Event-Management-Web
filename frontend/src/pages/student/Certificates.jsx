@@ -48,7 +48,7 @@ export default function Certificates() {
 
       {selected && (
         <div className="print-area fixed inset-0 z-50 overflow-y-auto bg-ink/80 p-4 sm:p-8">
-          <div className="mx-auto max-w-3xl border-[10px] border-double border-ink bg-[#fffdf7] p-8 text-center sm:p-12">
+          <div className="mx-auto max-w-3xl border-[10px] border-double border-black bg-[#fffdf7] p-8 text-center text-black sm:p-12">
             <h2 className="text-3xl font-bold uppercase tracking-widest sm:text-4xl">Certificate of participation</h2>
             <p className="mt-6">This certificate is proudly presented to</p>
             <p className="mx-auto mt-3 inline-block border-b-2 border-ink px-8 pb-1 text-3xl font-bold">{selected.student_name}</p>
