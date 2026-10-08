@@ -969,7 +969,7 @@ const changeAdminPassword = async (req, res, next) => {
 
     const passwordMatch = await bcrypt.compare(current_password, adminRows[0].password_hash);
     if (!passwordMatch) {
-      return res.status(401).json({ message: 'Current password is incorrect.' });
+      return res.status(400).json({ message: 'Current password is incorrect.' });
     }
 
     const hashedPassword = await bcrypt.hash(new_password, 10);

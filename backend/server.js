@@ -32,10 +32,17 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/certificates', certificateRoutes);
 
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+app.use(express.static(frontendDist));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(frontendDist, 'index.html'), (error) => {
+    if (error) {
+      res.status(503).send('The frontend has not been built yet. Run "npm run build" in the backend folder, then refresh.');
+    }
+  });
 });
 
 app.use(errorHandler);
