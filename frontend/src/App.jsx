@@ -3,6 +3,7 @@ import PublicLayout from './components/PublicLayout';
 import StaffLayout from './components/StaffLayout';
 import StudentArea from './components/StudentArea';
 import { adminLinks, organizerLinks } from './lib/staffNav';
+import CheckIn from './pages/CheckIn';
 import EventDetails from './pages/EventDetails';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/checkin" element={<CheckIn />} />
 
         <Route path="/student" element={<StudentArea />}>
           <Route index element={<Dashboard />} />

@@ -56,6 +56,7 @@ const badgeVariants = {
   Present: 'border-green-200 bg-green-50 text-green-700',
   Absent: 'border-red-200 bg-red-50 text-red-700',
   Pending: 'border-amber-200 bg-amber-50 text-amber-700',
+  Rejected: 'border-red-200 bg-red-50 text-red-700',
   Approved: 'border-green-200 bg-green-50 text-green-700',
 };
 

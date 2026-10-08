@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Award } from 'lucide-react';
+import CheckinQr from '../../components/CheckinQr';
 import PageTitle from '../../components/PageTitle';
 import { Badge, Button, Card, EmptyState, Field, Notice, Select, Table, Td, Th } from '../../components/ui';
 import { useRoleApi } from '../../hooks/useRoleApi';
-import { api, formatDate } from '../../lib/api';
-import { userId } from '../../lib/auth';
+import { formatDate } from '../../lib/api';
 
 export default function Attendance() {
   const call = useRoleApi('organizer');
@@ -16,10 +16,10 @@ export default function Attendance() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api('/events')
-      .then((all) => setEvents(all.filter((event) => event.organizer_id === userId('organizer'))))
+    call('/events/mine')
+      .then((all) => setEvents(all.filter((event) => event.approval_status === 'Approved')))
       .catch((err) => setError(err.message));
-  }, []);
+  }, [call]);
 
   const loadRoster = useCallback(
     async (id) => {
@@ -93,6 +93,8 @@ export default function Attendance() {
         {notice && <Notice>{notice}</Notice>}
         {error && <Notice type="error">{error}</Notice>}
       </div>
+
+      {eventId && <CheckinQr eventId={eventId} call={call} />}
 
       {roster && (
         <>

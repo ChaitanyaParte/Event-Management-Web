@@ -4,6 +4,7 @@ import { AuthCard, Field, RoleTabs } from '../components/AuthShell';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { dashboardPath } from '../lib/auth';
+import { useNextPath } from '../lib/redirect';
 
 const emptyForm = {
   roll_number: '',
@@ -24,6 +25,7 @@ export default function Register() {
   const [busy, setBusy] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { next, suffix } = useNextPath();
 
   const update = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
@@ -44,7 +46,7 @@ export default function Register() {
       const result = await api(`/auth/${role}/register`, { method: 'POST', body: payloadFor() });
       if (result.token) {
         login(role, result.token);
-        navigate(dashboardPath(role));
+        navigate(next && role === 'student' ? next : dashboardPath(role));
       } else {
         setNotice(result.message || 'Registration received. An admin must approve your account before you can log in.');
         setForm(emptyForm);
@@ -104,7 +106,7 @@ export default function Register() {
           {busy ? 'Creating account...' : 'Create account'}
         </button>
         <p className="text-center text-sm">
-          Already registered? <Link to="/login" className="font-semibold underline">Log in</Link>
+          Already registered? <Link to={`/login${suffix}`} className="font-semibold underline">Log in</Link>
         </p>
       </form>
     </AuthCard>

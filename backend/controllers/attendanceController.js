@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
 
 const markAttendance = async (req, res, next) => {
@@ -97,7 +98,101 @@ const getAttendanceByEvent = async (req, res, next) => {
   }
 };
 
+// Signed token that goes into the venue QR code. It is only valid for one event
+// and stops working a few hours after the event ends.
+const getCheckinToken = async (req, res, next) => {
+  const eventId = parseInt(req.params.eventId, 10);
+  if (Number.isNaN(eventId)) {
+    return res.status(400).json({ message: 'Invalid event ID.' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT organizer_id, status, approval_status,
+              GREATEST(EXTRACT(EPOCH FROM ((event_date + end_time) + INTERVAL '3 hours' - LOCALTIMESTAMP)), 3600)::int AS seconds_left
+       FROM Events WHERE event_id = $1`,
+      [eventId],
+    );
+    const event = rows[0];
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found.' });
+    }
+    if (req.user.role === 'organizer' && event.organizer_id !== req.user.id) {
+      return res.status(403).json({ message: 'You can only create a check-in code for your own events.' });
+    }
+    if (event.approval_status !== 'Approved') {
+      return res.status(400).json({ message: "This event hasn't been approved yet." });
+    }
+    if (event.status === 'Cancelled') {
+      return res.status(400).json({ message: 'This event was cancelled.' });
+    }
+
+    const token = jwt.sign({ type: 'checkin', eventId }, process.env.JWT_SECRET, { expiresIn: event.seconds_left });
+    res.json({ token });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkIn = async (req, res, next) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).json({ message: 'The check-in code is missing.' });
+  }
+
+  let payload;
+  try {
+    payload = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    return res.status(400).json({ message: 'This check-in code is invalid or has expired.' });
+  }
+  if (payload.type !== 'checkin' || !payload.eventId) {
+    return res.status(400).json({ message: 'This check-in code is invalid or has expired.' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT event_id, title, organizer_id, status,
+              ((event_date + start_time) - INTERVAL '30 minutes' <= LOCALTIMESTAMP
+               AND LOCALTIMESTAMP <= (event_date + end_time) + INTERVAL '3 hours') AS window_open
+       FROM Events WHERE event_id = $1`,
+      [payload.eventId],
+    );
+    const event = rows[0];
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found.' });
+    }
+    if (event.status === 'Cancelled') {
+      return res.status(400).json({ message: 'This event was cancelled.' });
+    }
+    if (!event.window_open) {
+      return res.status(400).json({ message: 'Check-in is only open from 30 minutes before the event until 3 hours after it ends.' });
+    }
+
+    const registration = await pool.query(
+      "SELECT registration_id FROM Registrations WHERE student_id = $1 AND event_id = $2 AND status = 'Registered'",
+      [req.user.id, event.event_id],
+    );
+    if (registration.rowCount === 0) {
+      return res.status(403).json({ message: "You're not registered for this event." });
+    }
+
+    await pool.query(
+      `INSERT INTO Attendance (registration_id, attendance_status, marked_by)
+       VALUES ($1, 'Present', $2)
+       ON CONFLICT (registration_id)
+       DO UPDATE SET attendance_status = 'Present', marked_by = EXCLUDED.marked_by, marked_at = CURRENT_TIMESTAMP`,
+      [registration.rows[0].registration_id, event.organizer_id],
+    );
+    res.json({ message: "You're checked in.", event_title: event.title });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   markAttendance,
   getAttendanceByEvent,
+  getCheckinToken,
+  checkIn,
 };

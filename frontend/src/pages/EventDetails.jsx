@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
+import Banner from '../components/Banner';
+import EventActions from '../components/EventActions';
 import { useAuth } from '../context/AuthContext';
 import { useRoleApi } from '../hooks/useRoleApi';
 import { api, formatDate, formatTime } from '../lib/api';
@@ -97,6 +99,9 @@ export default function EventDetails() {
 
   return (
     <article className={`${card} mx-auto mt-4 max-w-3xl overflow-hidden`}>
+      {event.image_url && (
+        <Banner src={event.image_url} alt={`Banner for ${event.title}`} className="h-52 border-b-2 border-ink sm:h-80" />
+      )}
       <div className="border-b-2 border-ink bg-pop-cyan p-6">
         <div className="mb-3 flex flex-wrap gap-2">
           <span className={chip('')}>{event.category_name}</span>
@@ -118,6 +123,7 @@ export default function EventDetails() {
           {action}
           {message && <p className="mt-3 rounded-md border-2 border-ink bg-pop-orange px-3 py-2 text-sm">{message}</p>}
         </div>
+        <EventActions event={event} />
       </div>
     </article>
   );
