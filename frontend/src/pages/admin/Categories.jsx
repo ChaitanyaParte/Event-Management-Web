@@ -48,7 +48,7 @@ export default function Categories() {
 
   return (
     <>
-      <PageTitle title="Categories" subtitle="Organise events into categories. A category in use can't be deleted." />
+      <PageTitle title="Categories" subtitle="Organize events into categories. A category in use can't be deleted." />
 
       <div className="space-y-3">
         {notice && <Notice>{notice}</Notice>}

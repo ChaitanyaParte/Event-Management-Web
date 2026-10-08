@@ -4,6 +4,7 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 import PageTitle from '../../components/PageTitle';
 import { Card, EmptyState } from '../../components/ui';
 import { useRoleApi } from '../../hooks/useRoleApi';
+import { useTheme } from '../../context/ThemeContext';
 import { formatDate } from '../../lib/api';
 
 const activityIcons = {
@@ -15,6 +16,7 @@ const activityIcons = {
 
 export default function Dashboard() {
   const call = useRoleApi('admin');
+  const { theme } = useTheme();
   const [state, setState] = useState(null);
   const [error, setError] = useState('');
 
@@ -34,6 +36,9 @@ export default function Dashboard() {
   if (!state) return <p className="text-sm text-zinc-500">Loading the dashboard...</p>;
 
   const { stats, activity, registrations, categories, popular } = state;
+  const dark = theme === 'dark';
+  const gridColor = dark ? '#3f3f46' : '#e4e4e7';
+  const tooltipStyle = dark ? { backgroundColor: '#18181b', border: '1px solid #3f3f46', color: '#fafafa' } : undefined;
   const tiles = [
     { label: 'Students', value: stats.total_students, icon: GraduationCap },
     { label: 'Organizers', value: stats.total_organizers, icon: Briefcase },
@@ -85,11 +90,11 @@ export default function Dashboard() {
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={registrationData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                   <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" name="Registrations" stroke="#18181b" strokeWidth={2} dot />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Line type="monotone" dataKey="count" name="Registrations" stroke={dark ? '#fafafa' : '#18181b'} strokeWidth={2} dot />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -101,11 +106,11 @@ export default function Dashboard() {
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="events" name="Events" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="events" name="Events" fill={dark ? '#60a5fa' : '#2563eb'} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

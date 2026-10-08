@@ -10,11 +10,11 @@ export default function EventCard({ event, index }) {
   const detailsPath = roles.length > 0 ? `/events/${event.event_id}` : '/login';
 
   return (
-    <article className={`${color} flex flex-col justify-between rounded-xl border-2 border-ink p-5 shadow-[5px_5px_0_0_#111]`}>
+    <article className={`${color} flex flex-col justify-between rounded-xl border-2 border-ink p-5 shadow-[5px_5px_0_0_var(--color-ink)]`}>
       <div>
         <div className="mb-3 flex flex-wrap gap-2 text-xs font-medium">
-          <span className="rounded-full border-[1.5px] border-ink bg-white px-2.5 py-0.5">{event.category_name}</span>
-          <span className="rounded-full border-[1.5px] border-ink bg-white px-2.5 py-0.5">{event.status}</span>
+          <span className="rounded-full border-[1.5px] border-ink bg-white px-2.5 py-0.5 text-ink">{event.category_name}</span>
+          <span className="rounded-full border-[1.5px] border-ink bg-white px-2.5 py-0.5 text-ink">{event.status}</span>
         </div>
         <h3 className="text-xl font-semibold leading-snug">{event.title}</h3>
         <p className="mt-2 line-clamp-2 text-sm">{event.description || 'Details coming soon.'}</p>

@@ -13,6 +13,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
 const { errorHandler } = require('./middleware/errorMiddleware');
+const { startEventStatusSync } = require('./utils/eventStatus');
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ verifyConnection()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      startEventStatusSync();
     });
   })
   .catch((err) => {
