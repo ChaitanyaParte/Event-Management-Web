@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" data-page="student-profile">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile | CampusX Events</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .student-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.5rem 0;
+    }
+    .student-nav .nav-links a.active {
+      color: var(--primary-light);
+    }
+    .logout-btn {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      transform: translateY(-1px);
+    }
+    .profile-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      max-width: 640px;
+    }
+    .profile-card h3 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      color: var(--secondary);
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.4rem;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-light);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: 2px solid rgba(167, 139, 250, 0.4);
+      border-color: rgba(167, 139, 250, 0.7);
+    }
+    .form-group input[readonly] {
+      background: rgba(255, 255, 255, 0.01);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .btn-save {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      padding: 0.8rem 1.5rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(124, 58, 237, 0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(124, 58, 237, 0.42);
+    }
+    .btn-save:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+    .toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .toast {
+      padding: 0.85rem 1.25rem;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.success { background: rgba(16, 185, 129, 0.9); }
+    .toast.error { background: rgba(239, 68, 68, 0.9); }
+    .toast.info { background: rgba(124, 58, 237, 0.9); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header class="container student-nav">
+    <a href="../index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="student-dashboard.html">Dashboard</a>
+      <a href="my-events.html">My Events</a>
+      <a href="profile.html" class="active">Profile</a>
+      <a href="certificates.html">Certificates</a>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0 4rem;">
+    <div class="page-header">
+      <div>
+        <h1>My Profile</h1>
+        <p class="section-subtitle">Keep your student details up to date.</p>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <h3>Profile Information</h3>
+      <form id="profileForm">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="fullName" readonly />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" readonly />
+        </div>
+        <div class="form-group">
+          <label>Roll Number</label>
+          <input type="text" id="rollNumber" readonly />
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="phone" placeholder="Enter your phone number" />
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <input type="text" id="department" placeholder="Enter your department" />
+        </div>
+        <div class="form-group">
+          <label>Year of Study</label>
+          <select id="yearOfStudy">
+            <option value="">Select year</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-save" id="saveBtn">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer style="padding: 2rem 0;">
+    <div class="container footer-grid">
+      <div><h3>CampusX Events</h3></div>
+      <div><a href="../index.html">Home</a><br /><a href="../events.html">Events</a></div>
+    </div>
+  </footer>
+
+  <script src="../assets/scripts.js"></script>
+  <script>
+
+    const token = localStorage.getItem('campusx_token_student');
+
+    if (!token) {
+      location.href = '../login.html';
+    }
+
+    function getStudentId() {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id;
+      } catch (e) {
+        localStorage.removeItem('campusx_token_student');
+        location.href = '../login.html';
+      }
+    }
+
+    const studentId = getStudentId();
+
+    function showToast(message, type = 'info') {
+      let container = document.querySelector('.toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    async function apiFetch(url, options = {}) {
+      const headers = {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+      const response = await fetch(API_BASE + url, { ...options, headers });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(err.message || 'API Error');
+      }
+      return response.json();
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('campusx_token_student');
+      location.href = '../index.html';
+    });
+
+    // Load profile
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const profile = await apiFetch('/students/' + studentId);
+        document.getElementById('fullName').value = profile.full_name || '';
+        document.getElementById('email').value = profile.email || '';
+        document.getElementById('rollNumber').value = profile.roll_number || '';
+        document.getElementById('phone').value = profile.phone || '';
+        document.getElementById('department').value = profile.department || '';
+        document.getElementById('yearOfStudy').value = profile.year_of_study || '';
+      } catch (err) {
+        showToast('Failed to load profile: ' + err.message, 'error');
+      }
+    });
+
+    // Save profile
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      const data = {
+        phone: document.getElementById('phone').value.trim(),
+        department: document.getElementById('department').value.trim(),
+        year_of_study: document.getElementById('yearOfStudy').value ? parseInt(document.getElementById('yearOfStudy').value) : null
+      };
+
+      try {
+        await apiFetch('/students/' + studentId, {
+          method: 'PUT',
+          body: JSON.stringify(data)
+        });
+        showToast('Profile updated successfully!', 'success');
+      } catch (err) {
+        showToast('Failed to update profile: ' + err.message, 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Profile';
+      }
+    });
+  </script>
+</body>
+</html>

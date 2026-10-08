@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-page="manage-certificates">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Certificates | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item active" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Manage Certificates</h1>
+      <p class="section-subtitle">View issued certificates and certificate details</p>
+    </header>
+
+    <section class="form-section">
+      <div class="search-bar" style="margin-bottom: 1rem;"><select class="select-input" id="issueEventSelect"><option value="">Loading events...</option></select><button class="search-button" id="issueBtn" style="background: linear-gradient(135deg, #10b981, #34d399);">Issue Certificates</button></div>
+      <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by student or certificate code">
+        <button class="search-button" id="searchBtn">Search</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Certificate Code</th>
+              <th>Student</th>
+              <th>Event</th>
+              <th>Issue Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="certificatesTable">
+            <tr><td colspan="5" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const api = window.adminAPI;
+      const tbody = document.getElementById('certificatesTable');
+      const searchInput = document.getElementById('searchInput');
+      const eventSelect = document.getElementById('issueEventSelect');
+      let allCertificates = [];
+
+      const esc = (value) => {
+        const div = document.createElement('div');
+        div.textContent = value == null ? '' : value;
+        return div.innerHTML;
+      };
+
+      const renderCertificates = (certificates) => {
+        if (certificates.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center">No certificates found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = certificates.map((cert) => `
+          <tr>
+            <td><code style="background: rgba(255,255,255,0.05); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">${esc(cert.certificate_code)}</code></td>
+            <td>${esc(cert.student_name)}</td>
+            <td>${esc(cert.event_title)}</td>
+            <td>${api.formatDate(cert.issue_date)}</td>
+            <td class="action-buttons">
+              <button class="btn-small btn-primary-small" onclick="viewCertificate(${cert.certificate_id})">View</button>
+            </td>
+          </tr>
+        `).join('');
+      };
+
+      const applyFilters = () => {
+        const term = searchInput.value.trim().toLowerCase();
+        renderCertificates(allCertificates.filter((cert) =>
+          !term || (cert.student_name || '').toLowerCase().includes(term) || (cert.certificate_code || '').toLowerCase().includes(term)));
+      };
+
+      const loadCertificates = async () => {
+        try {
+          allCertificates = await api.fetchAdmin('/admin/certificates');
+          applyFilters();
+        } catch (error) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center">Failed to load</td></tr>';
+          api.showToast('Failed to load certificates: ' + error.message, 'error');
+        }
+      };
+
+      const loadEventOptions = async () => {
+        try {
+          const events = await api.fetchAdmin('/admin/events');
+          const eligible = events.filter((event) => event.status !== 'Cancelled');
+          eventSelect.innerHTML = '<option value="">Select an event</option>'
+            + eligible.map((event) => `<option value="${event.event_id}">${esc(event.title)} (${esc(event.status)})</option>`).join('');
+        } catch (error) {
+          eventSelect.innerHTML = '<option value="">Failed to load events</option>';
+        }
+      };
+
+      window.viewCertificate = async (certId) => {
+        try {
+          const cert = await api.fetchAdmin(`/admin/certificates/${certId}`);
+          alert(`Certificate Details:\n\nCode: ${cert.certificate_code}\nStudent: ${cert.student_name}\nEvent: ${cert.event_title}\nIssued: ${api.formatDate(cert.issue_date)}`);
+        } catch (error) {
+          api.showToast('Failed to load certificate details', 'error');
+        }
+      };
+
+      document.getElementById('issueBtn').addEventListener('click', async () => {
+        if (!eventSelect.value) {
+          api.showToast('Select an event first', 'error');
+          return;
+        }
+        try {
+          const result = await api.fetchAdmin('/certificates/issue', {
+            method: 'POST',
+            body: JSON.stringify({ event_id: Number(eventSelect.value) }),
+          });
+          api.showToast(result.message, 'success');
+          await loadCertificates();
+        } catch (error) {
+          api.showToast('Failed to issue certificates: ' + error.message, 'error');
+        }
+      });
+
+      searchInput.addEventListener('input', applyFilters);
+      document.getElementById('searchBtn').addEventListener('click', applyFilters);
+      loadEventOptions();
+      loadCertificates();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" data-page="organizer-manage-events">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Events | CampusX Events</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .nav-links a.active {
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+    .logout-link {
+      color: #f87171 !important;
+    }
+    .events-table-wrap {
+      overflow-x: auto;
+    }
+    .events-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .events-table th,
+    .events-table td {
+      padding: 0.9rem 1rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .events-table th {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+    }
+    .events-table td {
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    .events-table tr:last-child td {
+      border-bottom: none;
+    }
+    .badge-status {
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-upcoming {
+      background: rgba(167, 139, 250, 0.15);
+      color: var(--primary-light);
+      border: 1px solid rgba(167, 139, 250, 0.25);
+    }
+    .badge-ongoing {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .badge-completed {
+      background: rgba(139, 146, 169, 0.15);
+      color: var(--text-muted);
+      border: 1px solid rgba(139, 146, 169, 0.25);
+    }
+    .badge-cancelled {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .btn-sm {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.82rem;
+      border-radius: 999px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-sm:hover {
+      opacity: 0.85;
+    }
+    .btn-edit {
+      background: rgba(167, 139, 250, 0.2);
+      color: var(--primary-light);
+    }
+    .btn-cancel {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      width: min(640px, 90vw);
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+    }
+    .modal-card h2 {
+      margin: 0 0 1.25rem;
+      font-size: 1.3rem;
+    }
+    .modal-card .form-grid {
+      gap: 1rem;
+    }
+    .modal-card label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+      justify-content: flex-end;
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-light);
+      border: 1px solid var(--border);
+    }
+    .feedback {
+      padding: 0.9rem 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      display: none;
+    }
+    .feedback-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .feedback-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="container page-header" style="padding: 1.5rem 0;">
+    <a href="../index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="organizer-dashboard.html">Dashboard</a>
+      <a href="create-event.html">Create Event</a>
+      <a href="manage-events.html" class="active">Manage Events</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="profile.html">Profile</a>
+      <a href="#" id="logoutBtn" class="logout-link">Logout</a>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0 4rem;">
+    <div class="page-header">
+      <div>
+        <h1>Manage Events</h1>
+        <p class="section-subtitle">View, edit, or cancel your events.</p>
+      </div>
+      <a href="create-event.html" class="btn">+ New Event</a>
+    </div>
+
+    <div class="feedback feedback-success" id="successMsg"></div>
+    <div class="feedback feedback-error" id="errorMsg"></div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="events-table-wrap">
+        <table class="events-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Date</th>
+              <th>Venue</th>
+              <th>Registrations</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="eventsBody">
+            <tr><td colspan="6" class="empty-state">Loading your events...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-card">
+      <h2>Edit Event</h2>
+      <form class="form-grid" id="editForm">
+        <input type="hidden" id="editEventId" />
+        <div>
+          <label for="editTitle">Title</label>
+          <input type="text" id="editTitle" name="title" required />
+        </div>
+        <div>
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" name="description" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="editVenue">Venue</label>
+            <input type="text" id="editVenue" name="venue" required />
+          </div>
+          <div>
+            <label for="editDate">Date</label>
+            <input type="date" id="editDate" name="event_date" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="editStart">Start Time</label>
+            <input type="time" id="editStart" name="start_time" required />
+          </div>
+          <div>
+            <label for="editEnd">End Time</label>
+            <input type="time" id="editEnd" name="end_time" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="editSeats">Seat Limit</label>
+            <input type="number" id="editSeats" name="seat_limit" min="1" required />
+          </div>
+          <div>
+            <label for="editCategory">Category</label>
+            <select id="editCategory" name="category_id" required>
+              <option value="">Loading...</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-sm btn-secondary" id="cancelEditBtn">Cancel</button>
+          <button type="submit" class="btn btn-sm" id="saveEditBtn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer style="padding: 2rem 0;">
+    <div class="container footer-grid">
+      <div><h3>CampusX Events</h3></div>
+      <div><a href="../index.html">Home</a><br /><a href="../events.html">Events</a></div>
+    </div>
+  </footer>
+
+  <script src="../assets/scripts.js"></script>
+  <script>
+
+
+    const token = localStorage.getItem('campusx_token_organizer');
+    if (!token) {
+      window.location.href = '../login.html';
+    }
+
+    function parseJWT(t) {
+      try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
+    }
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    }
+
+    function showFeedback(type, msg) {
+      const sEl = document.getElementById('successMsg');
+      const eEl = document.getElementById('errorMsg');
+      sEl.style.display = 'none';
+      eEl.style.display = 'none';
+      if (type === 'success') { sEl.textContent = msg; sEl.style.display = 'block'; }
+      else { eEl.textContent = msg; eEl.style.display = 'block'; }
+      setTimeout(() => { sEl.style.display = 'none'; eEl.style.display = 'none'; }, 4000);
+    }
+
+    function getStatusBadge(status) {
+      const s = (status || '').toLowerCase();
+      let cls = 'badge-upcoming';
+      if (s === 'ongoing') cls = 'badge-ongoing';
+      else if (s === 'completed') cls = 'badge-completed';
+      else if (s === 'cancelled') cls = 'badge-cancelled';
+      return '<span class="badge-status ' + cls + '">' + status + '</span>';
+    }
+
+    function formatDateISO(dateStr) {
+      if (!dateStr) return '';
+      return new Date(dateStr).toISOString().split('T')[0];
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('campusx_token_organizer');
+      window.location.href = '../index.html';
+    });
+
+    let categories = [];
+    let myEvents = [];
+    let organizerId = null;
+
+    async function loadCategories() {
+      try {
+        const res = await fetch(API_BASE + '/categories');
+        if (res.ok) categories = await res.json();
+      } catch (e) { console.error(e); }
+    }
+
+    function populateCategorySelect(selectEl, selectedId) {
+      selectEl.innerHTML = '<option value="">Select category</option>';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.category_id;
+        opt.textContent = cat.category_name;
+        if (cat.category_id === selectedId || cat.category_name === selectedId) opt.selected = true;
+        selectEl.appendChild(opt);
+      });
+    }
+
+    function renderEvents() {
+      const tbody = document.getElementById('eventsBody');
+      if (myEvents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">You have no events yet. <a href="create-event.html" style="color:var(--primary-light);">Create one</a>.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      myEvents.forEach(ev => {
+        const s = (ev.status || '').toLowerCase();
+        const canEdit = s !== 'cancelled' && s !== 'completed';
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong>' + ev.title + '</strong></td>' +
+          '<td>' + formatDate(ev.event_date) + '</td>' +
+          '<td>' + ev.venue + '</td>' +
+          '<td>' + ev.registered_count + ' / ' + ev.seat_limit + '</td>' +
+          '<td>' + getStatusBadge(ev.status) + '</td>' +
+          '<td>' +
+            (canEdit ?
+              '<div class="btn-group">' +
+                '<button class="btn-sm btn-edit" data-id="' + ev.event_id + '">Edit</button>' +
+                '<button class="btn-sm btn-cancel" data-id="' + ev.event_id + '">Cancel</button>' +
+              '</div>'
+              : '--') +
+          '</td>';
+        tbody.appendChild(tr);
+      });
+
+      // Attach edit handlers
+      tbody.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.id)));
+      });
+
+      // Attach cancel handlers
+      tbody.querySelectorAll('.btn-cancel').forEach(btn => {
+        btn.addEventListener('click', () => cancelEvent(parseInt(btn.dataset.id)));
+      });
+    }
+
+    function openEditModal(eventId) {
+      const ev = myEvents.find(e => e.event_id === eventId);
+      if (!ev) return;
+      document.getElementById('editEventId').value = ev.event_id;
+      document.getElementById('editTitle').value = ev.title;
+      document.getElementById('editDescription').value = ev.description || '';
+      document.getElementById('editVenue').value = ev.venue;
+      document.getElementById('editDate').value = formatDateISO(ev.event_date);
+      document.getElementById('editStart').value = ev.start_time || '';
+      document.getElementById('editEnd').value = ev.end_time || '';
+      document.getElementById('editSeats').value = ev.seat_limit;
+      populateCategorySelect(document.getElementById('editCategory'), ev.category_name);
+      document.getElementById('editModal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('open');
+    }
+
+    document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
+    document.getElementById('editModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('editModal')) closeEditModal();
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const eventId = document.getElementById('editEventId').value;
+      const body = {
+        title: document.getElementById('editTitle').value.trim(),
+        description: document.getElementById('editDescription').value.trim(),
+        venue: document.getElementById('editVenue').value.trim(),
+        event_date: document.getElementById('editDate').value,
+        start_time: document.getElementById('editStart').value,
+        end_time: document.getElementById('editEnd').value,
+        seat_limit: parseInt(document.getElementById('editSeats').value),
+        category_id: parseInt(document.getElementById('editCategory').value),
+      };
+
+      const btn = document.getElementById('saveEditBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const res = await fetch(API_BASE + '/events/' + eventId, {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Update failed.');
+        closeEditModal();
+        showFeedback('success', 'Event updated successfully.');
+        await loadEvents();
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
+      }
+    });
+
+    async function cancelEvent(eventId) {
+      if (!confirm('Are you sure you want to cancel this event?')) return;
+      try {
+        const res = await fetch(API_BASE + '/events/' + eventId, {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({ status: 'Cancelled' }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Cancel failed.');
+        showFeedback('success', 'Event cancelled.');
+        await loadEvents();
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', err.message);
+      }
+    }
+
+    async function loadEvents() {
+      try {
+        const res = await fetch(API_BASE + '/events');
+        if (!res.ok) throw new Error('Failed to load events.');
+        const allEvents = await res.json();
+        myEvents = allEvents.filter(ev => ev.organizer_id === organizerId);
+        renderEvents();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('eventsBody').innerHTML =
+          '<tr><td colspan="6" class="empty-state">Failed to load events.</td></tr>';
+      }
+    }
+
+    (async function init() {
+      const payload = parseJWT(token);
+      if (!payload || !payload.id) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      organizerId = payload.id;
+
+      await loadCategories();
+      await loadEvents();
+    })();
+  </script>
+</body>
+</html>

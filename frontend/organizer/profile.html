@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-page="organizer-profile">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile | CampusX Events</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .nav-links a.active {
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+    .logout-link {
+      color: #f87171 !important;
+    }
+    .profile-card {
+      max-width: 640px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      font-weight: 500;
+    }
+    .form-group input[readonly] {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    .feedback {
+      padding: 0.9rem 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      display: none;
+    }
+    .feedback-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .feedback-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <header class="container page-header" style="padding: 1.5rem 0;">
+    <a href="../index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="organizer-dashboard.html">Dashboard</a>
+      <a href="create-event.html">Create Event</a>
+      <a href="manage-events.html">Manage Events</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="profile.html" class="active">Profile</a>
+      <a href="#" id="logoutBtn" class="logout-link">Logout</a>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0 4rem;">
+    <div class="page-header">
+      <div>
+        <h1>My Profile</h1>
+        <p class="section-subtitle">Keep your organizer details up to date.</p>
+      </div>
+    </div>
+
+    <div class="card profile-card">
+      <div class="feedback feedback-success" id="successMsg"></div>
+      <div class="feedback feedback-error" id="errorMsg"></div>
+
+      <form class="form-grid" id="profileForm" style="gap: 1.15rem;">
+        <div class="form-group">
+          <label for="full_name">Full Name</label>
+          <input type="text" id="full_name" name="full_name" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" readonly />
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" />
+        </div>
+        <div class="form-group">
+          <label for="department">Department</label>
+          <input type="text" id="department" name="department" required />
+        </div>
+        <div class="form-group">
+          <label>Account Status</label>
+          <div><span class="status-pill" id="approvalStatus">--</span></div>
+        </div>
+        <button class="btn" type="submit" id="saveBtn">Save Profile</button>
+      </form>
+    </div>
+  </main>
+
+  <footer style="padding: 2rem 0;">
+    <div class="container footer-grid">
+      <div><h3>CampusX Events</h3></div>
+      <div><a href="../index.html">Home</a><br /><a href="../events.html">Events</a></div>
+    </div>
+  </footer>
+
+  <script src="../assets/scripts.js"></script>
+  <script>
+    const token = localStorage.getItem('campusx_token_organizer');
+    if (!token) {
+      window.location.href = '../login.html';
+    }
+
+    function parseJWT(t) {
+      try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
+    }
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    }
+
+    function showFeedback(type, msg) {
+      const successEl = document.getElementById('successMsg');
+      const errorEl = document.getElementById('errorMsg');
+      successEl.style.display = 'none';
+      errorEl.style.display = 'none';
+      const target = type === 'success' ? successEl : errorEl;
+      target.textContent = msg;
+      target.style.display = 'block';
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('campusx_token_organizer');
+      window.location.href = '../index.html';
+    });
+
+    const payload = parseJWT(token);
+    const organizerId = payload && payload.id;
+
+    function fillForm(profile) {
+      document.getElementById('full_name').value = profile.full_name || '';
+      document.getElementById('email').value = profile.email || '';
+      document.getElementById('phone').value = profile.phone || '';
+      document.getElementById('department').value = profile.department || '';
+      document.getElementById('approvalStatus').textContent = profile.approval_status || 'Approved';
+    }
+
+    (async function init() {
+      if (!organizerId) {
+        window.location.href = '../login.html';
+        return;
+      }
+      try {
+        const res = await fetch(API_BASE + '/organizers/' + organizerId, { headers: authHeaders() });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to load profile.');
+        fillForm(data);
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', err.message);
+      }
+    })();
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const res = await fetch(API_BASE + '/organizers/' + organizerId, {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            full_name: document.getElementById('full_name').value.trim(),
+            phone: document.getElementById('phone').value.trim(),
+            department: document.getElementById('department').value.trim(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to save profile.');
+        showFeedback('success', 'Profile updated successfully.');
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Profile';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" data-page="organizer-create-event">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Event | CampusX Events</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .create-card {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .form-grid label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      font-weight: 500;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    .feedback {
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      display: none;
+    }
+    .feedback-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .feedback-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .nav-links a.active {
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+    .logout-link {
+      color: #f87171 !important;
+    }
+    .btn-submit {
+      margin-top: 0.5rem;
+    }
+    .btn-submit[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="container page-header" style="padding: 1.5rem 0;">
+    <a href="../index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="organizer-dashboard.html">Dashboard</a>
+      <a href="create-event.html" class="active">Create Event</a>
+      <a href="manage-events.html">Manage Events</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="profile.html">Profile</a>
+      <a href="#" id="logoutBtn" class="logout-link">Logout</a>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0 4rem;">
+    <div class="page-header">
+      <div>
+        <h1>Create Event</h1>
+        <p class="section-subtitle">Fill in the details below to create a new event.</p>
+      </div>
+    </div>
+
+    <div class="card create-card">
+      <div class="feedback feedback-success" id="successMsg"></div>
+      <div class="feedback feedback-error" id="errorMsg"></div>
+
+      <form class="form-grid" id="createEventForm" style="gap: 1.15rem;">
+        <div class="form-group">
+          <label for="title">Event Title</label>
+          <input type="text" id="title" name="title" placeholder="e.g. Annual Tech Fest" required />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="4" placeholder="Describe the event..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category_id">Category</label>
+            <select id="category_id" name="category_id" required>
+              <option value="">Loading categories...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="venue">Venue</label>
+            <input type="text" id="venue" name="venue" placeholder="e.g. Main Auditorium" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="event_date">Event Date</label>
+          <input type="date" id="event_date" name="event_date" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="start_time">Start Time</label>
+            <input type="time" id="start_time" name="start_time" required />
+          </div>
+          <div class="form-group">
+            <label for="end_time">End Time</label>
+            <input type="time" id="end_time" name="end_time" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="seat_limit">Seat Limit</label>
+          <input type="number" id="seat_limit" name="seat_limit" placeholder="e.g. 100" min="1" required />
+        </div>
+
+        <button class="btn btn-submit" type="submit" id="submitBtn">Create Event</button>
+      </form>
+    </div>
+  </main>
+
+  <footer style="padding: 2rem 0;">
+    <div class="container footer-grid">
+      <div><h3>CampusX Events</h3></div>
+      <div><a href="../index.html">Home</a><br /><a href="../events.html">Events</a></div>
+    </div>
+  </footer>
+
+  <script src="../assets/scripts.js"></script>
+  <script>
+
+
+    // Auth guard
+    const token = localStorage.getItem('campusx_token_organizer');
+    if (!token) {
+      window.location.href = '../login.html';
+    }
+
+    function parseJWT(t) {
+      try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
+    }
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    }
+
+    function showFeedback(type, msg) {
+      const successEl = document.getElementById('successMsg');
+      const errorEl = document.getElementById('errorMsg');
+      successEl.style.display = 'none';
+      errorEl.style.display = 'none';
+      if (type === 'success') {
+        successEl.textContent = msg;
+        successEl.style.display = 'block';
+      } else {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+      }
+    }
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('campusx_token_organizer');
+      window.location.href = '../index.html';
+    });
+
+    (async function init() {
+      const payload = parseJWT(token);
+      if (!payload || !payload.id) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // Load categories
+      try {
+        const res = await fetch(API_BASE + '/categories');
+        if (!res.ok) throw new Error('Failed to load categories.');
+        const categories = await res.json();
+        const select = document.getElementById('category_id');
+        select.innerHTML = '<option value="">Select a category</option>';
+        categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.category_id;
+          opt.textContent = cat.category_name;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', 'Could not load categories. Please refresh.');
+      }
+
+      // Handle form submission
+      document.getElementById('createEventForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+
+        const form = e.target;
+        const body = {
+          title: form.title.value.trim(),
+          description: form.description.value.trim(),
+          category_id: parseInt(form.category_id.value),
+          venue: form.venue.value.trim(),
+          event_date: form.event_date.value,
+          start_time: form.start_time.value,
+          end_time: form.end_time.value,
+          seat_limit: parseInt(form.seat_limit.value),
+        };
+
+        try {
+          const res = await fetch(API_BASE + '/events', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || 'Failed to create event.');
+          }
+          showFeedback('success', 'Event "' + data.title + '" created successfully! Redirecting...');
+          setTimeout(() => { window.location.href = 'manage-events.html'; }, 1500);
+        } catch (err) {
+          console.error(err);
+          showFeedback('error', err.message || 'Something went wrong.');
+          btn.disabled = false;
+          btn.textContent = 'Create Event';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

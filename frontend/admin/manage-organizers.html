@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-page="manage-organizers">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Organizers | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item active" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Manage Organizers</h1>
+      <p class="section-subtitle">Review and approve organizer accounts</p>
+    </header>
+
+    <section class="form-section">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by name or email">
+        <select class="select-input" id="statusFilter">
+          <option value="">All Status</option>
+          <option value="Approved">Approved</option>
+          <option value="Pending">Pending</option>
+        </select>
+        <button class="search-button" id="searchBtn">Search</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="organizersTable">
+            <tr><td colspan="5" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="organizerModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Organizer Details</h2>
+        <button class="modal-close" onclick="document.getElementById('organizerModal').classList.remove('active')">&times;</button>
+      </div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const loadOrganizers = async () => {
+        try {
+          const data = await window.adminAPI.fetchAdmin('/admin/organizers');
+          const tbody = document.getElementById('organizersTable');
+          const statusBadge = (status) => `<span class="badge status-${status.toLowerCase()}">${status}</span>`;
+          
+          tbody.innerHTML = data.map(org => `
+            <tr>
+              <td>${org.full_name}</td>
+              <td>${org.email}</td>
+              <td>${org.department}</td>
+              <td>${statusBadge(org.approval_status)}</td>
+              <td class="action-buttons">
+                <button class="btn-small btn-primary-small" onclick="viewOrganizer(${org.organizer_id})">View</button>
+                ${org.approval_status === 'Pending' ? `<button class="btn-small btn-success-small" onclick="window.adminAPI.approveOrganizer(${org.organizer_id})">Approve</button>` : ''}
+                <button class="btn-small btn-danger-small" onclick="window.adminAPI.deleteItem('/admin/organizers', ${org.organizer_id}, 'Organizer')">Delete</button>
+              </td>
+            </tr>
+          `).join('');
+        } catch (error) {
+          document.getElementById('organizersTable').innerHTML = '<tr><td colspan="5" class="text-center">Failed to load</td></tr>';
+        }
+      };
+
+      window.viewOrganizer = async (organizerId) => {
+        try {
+          const org = await window.adminAPI.fetchAdmin(`/admin/organizers/${organizerId}`);
+          const html = `
+            <div style="margin-bottom: 2rem;">
+              <h3 style="margin-top: 0;">${org.full_name}</h3>
+              <table style="width: 100%;">
+                <tr><td style="color: var(--text-muted);">Email:</td><td>${org.email}</td></tr>
+                <tr><td style="color: var(--text-muted);">Phone:</td><td>${org.phone || 'N/A'}</td></tr>
+                <tr><td style="color: var(--text-muted);">Department:</td><td>${org.department}</td></tr>
+                <tr><td style="color: var(--text-muted);">Status:</td><td><span class="badge status-${org.approval_status.toLowerCase()}">${org.approval_status}</span></td></tr>
+                <tr><td style="color: var(--text-muted);">Joined:</td><td>${window.adminAPI.formatDate(org.created_at)}</td></tr>
+              </table>
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+              ${org.approval_status === 'Pending' ? `<button class="btn-small btn-success-small" onclick="window.adminAPI.approveOrganizer(${organizerId})">Approve</button>` : ''}
+              <button class="btn-small btn-danger-small" onclick="window.adminAPI.deleteItem('/admin/organizers', ${organizerId}, 'Organizer')">Delete</button>
+            </div>
+          `;
+          document.getElementById('modalContent').innerHTML = html;
+          document.getElementById('organizerModal').classList.add('active');
+        } catch (error) {
+          window.adminAPI.showToast('Failed to load organizer details', 'error');
+        }
+      };
+
+      document.getElementById('searchBtn').addEventListener('click', loadOrganizers);
+      loadOrganizers();
+    });
+  </script>
+</body>
+</html>

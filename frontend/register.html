@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" data-page="register">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | CampusX Events</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="container page-header">
+    <a href="index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="events.html">Events</a>
+      <a href="login.html" class="btn">Login</a>
+    </nav>
+  </header>
+
+  <main class="container auth-shell">
+    <div class="card auth-card">
+      <h2 id="register-form-title">Student Registration</h2>
+      <p class="section-subtitle">Create an account to join campus events, track attendance, and collect certificates.</p>
+      <form class="form-grid" data-register-form>
+        <div class="login-role-toggle" aria-label="Registration role selection" style="grid-template-columns: 1fr 1fr 1fr;">
+          <button type="button" class="login-role-option is-active" data-role="student">Student</button>
+          <button type="button" class="login-role-option" data-role="organizer">Organizer</button>
+          <button type="button" class="login-role-option" data-role="admin">Admin</button>
+        </div>
+        <input type="hidden" name="role" id="register-role" value="student" />
+
+        <!-- Admin Fields -->
+        <div id="admin-fields" style="display:none;">
+          <input type="text" name="username" placeholder="Username" />
+        </div>
+
+        <!-- Student Fields -->
+        <div id="student-fields">
+          <input type="text" name="roll_number" placeholder="Roll Number" />
+          <select name="year_of_study">
+            <option value="">Year of Study</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+
+        <!-- Common Fields -->
+        <input type="text" name="full_name" placeholder="Full Name" required />
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="password" name="password" placeholder="Password" required />
+
+        <!-- Student/Organizer only fields -->
+        <div id="extra-fields">
+          <input type="tel" name="phone" placeholder="Phone" />
+          <input type="text" name="department" placeholder="Department" required />
+        </div>
+        
+        <button class="btn" type="submit" id="register-submit-btn">Create Account</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container footer-grid">
+      <div>
+        <h3>CampusX Events</h3>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="events.html">Events</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/scripts.js"></script>
+</body>
+</html>

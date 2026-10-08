@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" data-page="admin-profile">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Profile | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+  <style>
+    .profile-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .profile-card h3 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      color: #f97316;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #8b92a9;
+      font-size: 0.9rem;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #e6eef8;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #f97316;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .btn-save, .btn-cancel {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-save {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white;
+    }
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(249, 115, 22, 0.3);
+    }
+    .btn-cancel {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #8b92a9;
+    }
+    .btn-cancel:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item active" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Admin Profile</h1>
+      <p class="section-subtitle">Manage your account settings and password</p>
+    </header>
+
+    <section class="form-section">
+      <div class="profile-card">
+        <h3>Profile Information</h3>
+        <form id="profileForm">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="fullName" required readonly style="background: rgba(255, 255, 255, 0.02);">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" required readonly style="background: rgba(255, 255, 255, 0.02);">
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="phone" placeholder="Update your phone number">
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="department" placeholder="Update your department">
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-save" onclick="editProfile()">Edit Profile</button>
+            <button type="button" class="btn-cancel" onclick="resetProfile()">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="profile-card">
+        <h3>Change Password</h3>
+        <form id="passwordForm">
+          <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" id="currentPassword" required placeholder="Enter current password">
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="newPassword" required placeholder="Enter new password (min 6 chars)">
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" id="confirmPassword" required placeholder="Confirm new password">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-save">Change Password</button>
+            <button type="reset" class="btn-cancel">Clear</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    let isEditing = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const profile = await window.adminAPI.fetchAdmin('/admin/profile');
+        document.getElementById('fullName').value = profile.full_name;
+        document.getElementById('email').value = profile.email;
+        document.getElementById('phone').value = profile.phone || '';
+        document.getElementById('department').value = profile.department || '';
+      } catch (error) {
+        window.adminAPI.showToast('Failed to load profile', 'error');
+      }
+
+      document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const current = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        if (newPass.length < 6) {
+          window.adminAPI.showToast('Password must be at least 6 characters', 'error');
+          return;
+        }
+
+        if (newPass !== confirm) {
+          window.adminAPI.showToast('Passwords do not match', 'error');
+          return;
+        }
+
+        try {
+          await window.adminAPI.fetchAdmin('/admin/profile/password', {
+            method: 'PUT',
+            body: JSON.stringify({ current_password: current, new_password: newPass })
+          });
+          window.adminAPI.showToast('Password changed successfully', 'success');
+          document.getElementById('passwordForm').reset();
+        } catch (error) {
+          window.adminAPI.showToast('Failed: ' + error.message, 'error');
+        }
+      });
+    });
+
+    window.editProfile = async () => {
+      if (!isEditing) {
+        document.getElementById('phone').removeAttribute('readonly');
+        document.getElementById('department').removeAttribute('readonly');
+        document.getElementById('phone').style.background = 'rgba(255, 255, 255, 0.05)';
+        document.getElementById('department').style.background = 'rgba(255, 255, 255, 0.05)';
+        document.querySelector('.btn-save').textContent = 'Save Changes';
+        isEditing = true;
+        return;
+      }
+
+      const phone = document.getElementById('phone').value;
+      const department = document.getElementById('department').value;
+
+      try {
+        await window.adminAPI.fetchAdmin('/admin/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ phone, department })
+        });
+        window.adminAPI.showToast('Profile updated successfully', 'success');
+        document.getElementById('phone').setAttribute('readonly', 'readonly');
+        document.getElementById('department').setAttribute('readonly', 'readonly');
+        document.getElementById('phone').style.background = 'rgba(255, 255, 255, 0.02)';
+        document.getElementById('department').style.background = 'rgba(255, 255, 255, 0.02)';
+        document.querySelector('.btn-save').textContent = 'Edit Profile';
+        isEditing = false;
+      } catch (error) {
+        window.adminAPI.showToast('Failed to update profile: ' + error.message, 'error');
+      }
+    };
+
+    window.resetProfile = () => {
+      if (isEditing) {
+        document.getElementById('phone').setAttribute('readonly', 'readonly');
+        document.getElementById('department').setAttribute('readonly', 'readonly');
+        document.getElementById('phone').style.background = 'rgba(255, 255, 255, 0.02)';
+        document.getElementById('department').style.background = 'rgba(255, 255, 255, 0.02)';
+        document.querySelector('.btn-save').textContent = 'Edit Profile';
+        isEditing = false;
+      }
+    };
+  </script>
+</body>
+</html>

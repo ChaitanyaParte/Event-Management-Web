@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" data-page="manage-events">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Events | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item active" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Manage Events</h1>
+      <p class="section-subtitle">View, edit, and control events</p>
+    </header>
+
+    <section class="form-section">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by event name">
+        <select class="select-input" id="statusFilter">
+          <option value="">All Status</option>
+          <option value="Upcoming">Upcoming</option>
+          <option value="Ongoing">Ongoing</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <button class="search-button" id="searchBtn">Search</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Date</th>
+              <th>Organizer</th>
+              <th>Registrations</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="eventsTable">
+            <tr><td colspan="6" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="eventModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Event Details</h2>
+        <button class="modal-close" onclick="document.getElementById('eventModal').classList.remove('active')">&times;</button>
+      </div>
+      <div id="modalContent" style="max-height: 60vh; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const api = window.adminAPI;
+      const searchInput = document.getElementById('searchInput');
+      const statusFilter = document.getElementById('statusFilter');
+      const tbody = document.getElementById('eventsTable');
+      const modal = document.getElementById('eventModal');
+      let allEvents = [];
+
+      const esc = (value) => {
+        const div = document.createElement('div');
+        div.textContent = value == null ? '' : value;
+        return div.innerHTML;
+      };
+      const pad = (n) => String(n).padStart(2, '0');
+      const toDateInput = (value) => {
+        const d = new Date(value);
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      };
+      const toTimeInput = (value) => String(value || '').slice(0, 5);
+      const isOpen = (event) => event.status !== 'Cancelled' && event.status !== 'Completed';
+      const statusBadge = (status) => `<span class="badge status-${esc(status).toLowerCase()}">${esc(status)}</span>`;
+
+      const renderEvents = (events) => {
+        if (events.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center">No events found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = events.map((event) => `
+          <tr>
+            <td>${esc(event.title)}</td>
+            <td>${api.formatDate(event.event_date)}</td>
+            <td>${esc(event.organizer_name)}</td>
+            <td>${event.registered_count}/${event.seat_limit}</td>
+            <td>${statusBadge(event.status)}</td>
+            <td class="action-buttons">
+              <button class="btn-small btn-primary-small" onclick="viewEvent(${event.event_id})">View</button>
+              <button class="btn-small btn-primary-small" onclick="editEvent(${event.event_id})">Edit</button>
+              ${isOpen(event) ? `<button class="btn-small btn-danger-small" onclick="window.adminAPI.cancelEvent(${event.event_id})">Cancel</button>` : ''}
+            </td>
+          </tr>
+        `).join('');
+      };
+
+      const applyFilters = () => {
+        const term = searchInput.value.trim().toLowerCase();
+        const status = statusFilter.value;
+        renderEvents(allEvents.filter((event) =>
+          (!term || (event.title || '').toLowerCase().includes(term)) && (!status || event.status === status)));
+      };
+
+      const loadEvents = async () => {
+        try {
+          allEvents = await api.fetchAdmin('/admin/events');
+          applyFilters();
+        } catch (error) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load</td></tr>';
+          api.showToast('Failed to load events: ' + error.message, 'error');
+        }
+      };
+
+      window.viewEvent = async (eventId) => {
+        try {
+          const event = await api.fetchAdmin(`/admin/events/${eventId}`);
+          document.getElementById('modalContent').innerHTML = `
+            <div style="margin-bottom: 2rem;">
+              <h3 style="margin-top: 0;">${esc(event.title)}</h3>
+              <table style="width: 100%; margin-bottom: 1.5rem;">
+                <tr><td style="color: var(--text-muted); padding: 0.5rem 0;">Date & Time:</td><td>${api.formatDate(event.event_date)} ${esc(toTimeInput(event.start_time))} - ${esc(toTimeInput(event.end_time))}</td></tr>
+                <tr><td style="color: var(--text-muted); padding: 0.5rem 0;">Venue:</td><td>${esc(event.venue)}</td></tr>
+                <tr><td style="color: var(--text-muted); padding: 0.5rem 0;">Category:</td><td>${esc(event.category_name)}</td></tr>
+                <tr><td style="color: var(--text-muted); padding: 0.5rem 0;">Organizer:</td><td>${esc(event.organizer_name)}</td></tr>
+                <tr><td style="color: var(--text-muted); padding: 0.5rem 0;">Seat Limit:</td><td>${event.seat_limit}</td></tr>
+                <tr><td style="color: var(--text-muted); padding: 0.5rem 0;">Registrations:</td><td>${event.registered_count}/${event.seat_limit}</td></tr>
+                <tr><td style="color: var(--text-muted); padding: 0.5rem 0;">Status:</td><td>${statusBadge(event.status)}</td></tr>
+              </table>
+              ${event.description ? `<p style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 6px;">${esc(event.description)}</p>` : ''}
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+              <button class="btn-small btn-primary-small" onclick="editEvent(${eventId})">Edit</button>
+              ${isOpen(event) ? `<button class="btn-small btn-danger-small" onclick="window.adminAPI.cancelEvent(${eventId}); document.getElementById('eventModal').classList.remove('active');">Cancel Event</button>` : ''}
+            </div>
+          `;
+          modal.classList.add('active');
+        } catch (error) {
+          api.showToast('Failed to load event details: ' + error.message, 'error');
+        }
+      };
+
+      window.editEvent = async (eventId) => {
+        try {
+          const [event, categoriesResponse] = await Promise.all([
+            api.fetchAdmin(`/admin/events/${eventId}`),
+            fetch(`${API_BASE}/categories`),
+          ]);
+          const categories = await categoriesResponse.json();
+          const label = 'display:block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.3rem;';
+          const field = 'width: 100%; margin-bottom: 1rem;';
+          const options = (values, selected) => values
+            .map((v) => `<option value="${esc(v.value)}" ${String(v.value) === String(selected) ? 'selected' : ''}>${esc(v.label)}</option>`).join('');
+
+          document.getElementById('modalContent').innerHTML = `
+            <form id="editEventForm">
+              <label style="${label}">Title</label>
+              <input class="search-input" style="${field}" name="title" value="${esc(event.title)}" required>
+              <label style="${label}">Description</label>
+              <textarea class="search-input" style="${field} min-height: 80px;" name="description">${esc(event.description)}</textarea>
+              <label style="${label}">Category</label>
+              <select class="select-input" style="${field}" name="category_id">
+                ${options(categories.map((c) => ({ value: c.category_id, label: c.category_name })), event.category_id)}
+              </select>
+              <label style="${label}">Venue</label>
+              <input class="search-input" style="${field}" name="venue" value="${esc(event.venue)}" required>
+              <label style="${label}">Date</label>
+              <input class="search-input" style="${field}" type="date" name="event_date" value="${toDateInput(event.event_date)}" required>
+              <label style="${label}">Start Time</label>
+              <input class="search-input" style="${field}" type="time" name="start_time" value="${esc(toTimeInput(event.start_time))}" required>
+              <label style="${label}">End Time</label>
+              <input class="search-input" style="${field}" type="time" name="end_time" value="${esc(toTimeInput(event.end_time))}" required>
+              <label style="${label}">Seat Limit</label>
+              <input class="search-input" style="${field}" type="number" min="1" name="seat_limit" value="${event.seat_limit}" required>
+              <label style="${label}">Status</label>
+              <select class="select-input" style="${field}" name="status">
+                ${options(['Upcoming', 'Ongoing', 'Completed', 'Cancelled'].map((s) => ({ value: s, label: s })), event.status)}
+              </select>
+              <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn-small btn-primary-small">Save Changes</button>
+                <button type="button" class="btn-small btn-danger-small" onclick="viewEvent(${eventId})">Cancel</button>
+              </div>
+            </form>
+          `;
+          modal.classList.add('active');
+
+          document.getElementById('editEventForm').addEventListener('submit', async (submitEvent) => {
+            submitEvent.preventDefault();
+            const form = submitEvent.target;
+            try {
+              await api.fetchAdmin(`/admin/events/${eventId}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                  title: form.title.value.trim(),
+                  description: form.description.value.trim(),
+                  category_id: Number(form.category_id.value),
+                  venue: form.venue.value.trim(),
+                  event_date: form.event_date.value,
+                  start_time: form.start_time.value,
+                  end_time: form.end_time.value,
+                  seat_limit: Number(form.seat_limit.value),
+                  status: form.status.value,
+                }),
+              });
+              api.showToast('Event updated successfully', 'success');
+              modal.classList.remove('active');
+              await loadEvents();
+            } catch (error) {
+              api.showToast('Failed to update event: ' + error.message, 'error');
+            }
+          });
+        } catch (error) {
+          api.showToast('Failed to load event: ' + error.message, 'error');
+        }
+      };
+
+      searchInput.addEventListener('input', applyFilters);
+      statusFilter.addEventListener('change', applyFilters);
+      document.getElementById('searchBtn').addEventListener('click', applyFilters);
+
+      loadEvents();
+    });
+  </script>
+</body>
+</html>

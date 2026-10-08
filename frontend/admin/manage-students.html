@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" data-page="manage-students">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Students | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item active" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Manage Students</h1>
+      <p class="section-subtitle">View, search, and manage student accounts</p>
+    </header>
+
+    <section class="form-section">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by name, email, or roll number">
+        <select class="select-input" id="departmentFilter">
+          <option value="">All Departments</option>
+          <option value="CSE">CSE</option>
+          <option value="ECE">ECE</option>
+          <option value="ME">ME</option>
+          <option value="CE">CE</option>
+        </select>
+        <select class="select-input" id="yearFilter">
+          <option value="">All Years</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+          <option value="4">4th Year</option>
+        </select>
+        <button class="search-button" id="searchBtn">Search</button>
+        <button class="search-button" id="exportBtn" style="background: linear-gradient(135deg, #10b981, #34d399);">Export CSV</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Roll Number</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Department</th>
+              <th>Year</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTable">
+            <tr><td colspan="6" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- View/Edit Modal -->
+  <div class="modal-overlay" id="studentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Student Details</h2>
+        <button class="modal-close" onclick="document.getElementById('studentModal').classList.remove('active')">&times;</button>
+      </div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const api = window.adminAPI;
+      const searchInput = document.getElementById('searchInput');
+      const departmentFilter = document.getElementById('departmentFilter');
+      const yearFilter = document.getElementById('yearFilter');
+      const tbody = document.getElementById('studentsTable');
+      const modal = document.getElementById('studentModal');
+      let allStudents = [];
+
+      const esc = (value) => {
+        const div = document.createElement('div');
+        div.textContent = value == null ? '' : value;
+        return div.innerHTML;
+      };
+
+      const renderStudents = (students) => {
+        if (students.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = students.map((student) => `
+          <tr>
+            <td>${esc(student.roll_number)}</td>
+            <td>${esc(student.full_name)}</td>
+            <td>${esc(student.email)}</td>
+            <td>${esc(student.department)}</td>
+            <td>${esc(student.year_of_study)}</td>
+            <td class="action-buttons">
+              <button class="btn-small btn-primary-small" onclick="viewStudent(${student.student_id})">View</button>
+              <button class="btn-small btn-primary-small" onclick="editStudent(${student.student_id})">Edit</button>
+              <button class="btn-small btn-danger-small" onclick="window.adminAPI.deleteItem('/admin/students', ${student.student_id}, 'Student')">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      };
+
+      const applyFilters = () => {
+        const term = searchInput.value.trim().toLowerCase();
+        const department = departmentFilter.value;
+        const year = yearFilter.value;
+        renderStudents(allStudents.filter((student) => {
+          const matchesTerm = !term || [student.full_name, student.email, student.roll_number]
+            .some((field) => (field || '').toLowerCase().includes(term));
+          return matchesTerm
+            && (!department || student.department === department)
+            && (!year || String(student.year_of_study) === year);
+        }));
+      };
+
+      const loadStudents = async () => {
+        try {
+          allStudents = await api.fetchAdmin('/admin/students');
+          const departments = [...new Set(allStudents.map((s) => s.department).filter(Boolean))].sort();
+          const selected = departmentFilter.value;
+          departmentFilter.innerHTML = '<option value="">All Departments</option>'
+            + departments.map((d) => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+          departmentFilter.value = departments.includes(selected) ? selected : '';
+          applyFilters();
+        } catch (error) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load students</td></tr>';
+          api.showToast('Failed to load students: ' + error.message, 'error');
+        }
+      };
+
+      window.viewStudent = async (studentId) => {
+        try {
+          const student = await api.fetchAdmin(`/admin/students/${studentId}`);
+          const registrations = await api.fetchAdmin(`/admin/students/${studentId}/registrations`);
+          const attendance = await api.fetchAdmin(`/admin/students/${studentId}/attendance`);
+
+          document.getElementById('modalContent').innerHTML = `
+            <div style="margin-bottom: 2rem;">
+              <h3 style="margin-top: 0;">${esc(student.full_name)}</h3>
+              <table style="width: 100%; margin-bottom: 1.5rem;">
+                <tr><td style="color: var(--text-muted);">Roll Number:</td><td>${esc(student.roll_number)}</td></tr>
+                <tr><td style="color: var(--text-muted);">Email:</td><td>${esc(student.email)}</td></tr>
+                <tr><td style="color: var(--text-muted);">Phone:</td><td>${esc(student.phone) || 'N/A'}</td></tr>
+                <tr><td style="color: var(--text-muted);">Department:</td><td>${esc(student.department)}</td></tr>
+                <tr><td style="color: var(--text-muted);">Year:</td><td>${esc(student.year_of_study)}</td></tr>
+                <tr><td style="color: var(--text-muted);">Joined:</td><td>${api.formatDate(student.created_at)}</td></tr>
+              </table>
+            </div>
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08);">
+              <p style="margin: 0.5rem 0; color: var(--text-muted);">📝 Events Registered: ${registrations.length}</p>
+              <p style="margin: 0.5rem 0; color: var(--text-muted);">✅ Attendance Records: ${attendance.length}</p>
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+              <button class="btn-small btn-primary-small" onclick="editStudent(${studentId})">Edit</button>
+              <button class="btn-small btn-danger-small" onclick="window.adminAPI.deleteItem('/admin/students', ${studentId}, 'Student')">Delete</button>
+            </div>
+          `;
+          modal.classList.add('active');
+        } catch (error) {
+          api.showToast('Failed to load student details: ' + error.message, 'error');
+        }
+      };
+
+      window.editStudent = async (studentId) => {
+        try {
+          const student = await api.fetchAdmin(`/admin/students/${studentId}`);
+          const label = 'display:block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.3rem;';
+          const field = 'width: 100%; margin-bottom: 1rem;';
+          document.getElementById('modalContent').innerHTML = `
+            <form id="editStudentForm">
+              <label style="${label}">Roll Number (cannot be changed)</label>
+              <input class="search-input" style="${field} opacity: 0.6;" value="${esc(student.roll_number)}" readonly>
+              <label style="${label}">Email (cannot be changed)</label>
+              <input class="search-input" style="${field} opacity: 0.6;" value="${esc(student.email)}" readonly>
+              <label style="${label}">Full Name</label>
+              <input class="search-input" style="${field}" name="full_name" value="${esc(student.full_name)}" required>
+              <label style="${label}">Phone</label>
+              <input class="search-input" style="${field}" name="phone" value="${esc(student.phone)}">
+              <label style="${label}">Department</label>
+              <input class="search-input" style="${field}" name="department" value="${esc(student.department)}" required>
+              <label style="${label}">Year of Study</label>
+              <select class="select-input" style="${field}" name="year_of_study">
+                ${[1, 2, 3, 4].map((y) => `<option value="${y}" ${Number(student.year_of_study) === y ? 'selected' : ''}>Year ${y}</option>`).join('')}
+              </select>
+              <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn-small btn-primary-small">Save Changes</button>
+                <button type="button" class="btn-small btn-danger-small" onclick="viewStudent(${studentId})">Cancel</button>
+              </div>
+            </form>
+          `;
+          modal.classList.add('active');
+
+          document.getElementById('editStudentForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.target;
+            try {
+              await api.fetchAdmin(`/admin/students/${studentId}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                  full_name: form.full_name.value.trim(),
+                  phone: form.phone.value.trim(),
+                  department: form.department.value.trim(),
+                  year_of_study: Number(form.year_of_study.value),
+                }),
+              });
+              api.showToast('Student updated successfully', 'success');
+              modal.classList.remove('active');
+              await loadStudents();
+            } catch (error) {
+              api.showToast('Failed to update student: ' + error.message, 'error');
+            }
+          });
+        } catch (error) {
+          api.showToast('Failed to load student: ' + error.message, 'error');
+        }
+      };
+
+      searchInput.addEventListener('input', applyFilters);
+      departmentFilter.addEventListener('change', applyFilters);
+      yearFilter.addEventListener('change', applyFilters);
+      document.getElementById('searchBtn').addEventListener('click', applyFilters);
+
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        const csvCell = (value) => `"${String(value == null ? '' : value).replace(/"/g, '""')}"`;
+        const rows = allStudents.map((s) => [s.roll_number, s.full_name, s.email, s.department, s.year_of_study, s.phone].map(csvCell).join(','));
+        const csv = ['Roll Number,Name,Email,Department,Year,Phone', ...rows].join('\n');
+        const url = window.URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'students.csv';
+        link.click();
+        window.URL.revokeObjectURL(url);
+      });
+
+      loadStudents();
+    });
+  </script>
+</body>
+</html>

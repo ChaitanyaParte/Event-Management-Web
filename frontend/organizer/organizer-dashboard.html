@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" data-page="organizer-dashboard">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organizer Dashboard | CampusX Events</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .welcome-banner {
+      margin-bottom: 2rem;
+    }
+    .welcome-banner h1 {
+      margin: 0 0 0.25rem;
+      font-size: 1.8rem;
+    }
+    .stat-card .stat-number {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--primary-light);
+    }
+    .stat-card .stat-label {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+    .upcoming-section {
+      margin-top: 2.5rem;
+    }
+    .upcoming-section h2 {
+      margin: 0 0 1.25rem;
+      font-size: 1.4rem;
+    }
+    .event-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.2s;
+    }
+    .event-row:hover {
+      border-color: rgba(167, 139, 250, 0.3);
+    }
+    .event-row-info h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1.1rem;
+    }
+    .event-row-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .event-row-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+    .badge-status {
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-upcoming {
+      background: rgba(167, 139, 250, 0.15);
+      color: var(--primary-light);
+      border: 1px solid rgba(167, 139, 250, 0.25);
+    }
+    .badge-ongoing {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .badge-completed {
+      background: rgba(139, 146, 169, 0.15);
+      color: var(--text-muted);
+      border: 1px solid rgba(139, 146, 169, 0.25);
+    }
+    .badge-cancelled {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .seats-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-state p {
+      margin: 0.5rem 0;
+    }
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 600;
+      z-index: 1000;
+      transform: translateY(120%);
+      transition: transform 0.3s ease;
+    }
+    .toast.show {
+      transform: translateY(0);
+    }
+    .toast-error {
+      background: rgba(239, 68, 68, 0.9);
+      color: #fff;
+    }
+    .logout-link {
+      color: #f87171 !important;
+    }
+    .nav-links a.active {
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+    @media (max-width: 640px) {
+      .event-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="container page-header" style="padding: 1.5rem 0;">
+    <a href="../index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="organizer-dashboard.html" class="active">Dashboard</a>
+      <a href="create-event.html">Create Event</a>
+      <a href="manage-events.html">Manage Events</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="profile.html">Profile</a>
+      <a href="#" id="logoutBtn" class="logout-link">Logout</a>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0 4rem;">
+    <div class="welcome-banner">
+      <h1 id="welcomeHeading">Welcome back</h1>
+      <p class="section-subtitle">Here is an overview of your events and activity.</p>
+    </div>
+
+    <div class="grid stats-grid" id="statsGrid">
+      <div class="card stat-card">
+        <div class="stat-number" id="statTotalEvents">--</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-number" id="statUpcoming">--</div>
+        <div class="stat-label">Upcoming Events</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-number" id="statRegistrations">--</div>
+        <div class="stat-label">Total Registrations</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-number" id="statCompleted">--</div>
+        <div class="stat-label">Completed Events</div>
+      </div>
+    </div>
+
+    <div class="upcoming-section">
+      <h2>Upcoming Events</h2>
+      <div id="upcomingList">
+        <div class="empty-state"><p>Loading events...</p></div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="padding: 2rem 0;">
+    <div class="container footer-grid">
+      <div><h3>CampusX Events</h3></div>
+      <div><a href="../index.html">Home</a><br /><a href="../events.html">Events</a></div>
+    </div>
+  </footer>
+
+  <div class="toast toast-error" id="toast"></div>
+
+  <script src="../assets/scripts.js"></script>
+  <script>
+
+
+    // Auth guard
+    const token = localStorage.getItem('campusx_token_organizer');
+    if (!token) {
+      window.location.href = '../login.html';
+    }
+
+    // Parse JWT
+    function parseJWT(t) {
+      try {
+        return JSON.parse(atob(t.split('.')[1]));
+      } catch {
+        return null;
+      }
+    }
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    function getStatusBadge(status) {
+      const s = (status || '').toLowerCase();
+      let cls = 'badge-upcoming';
+      if (s === 'ongoing') cls = 'badge-ongoing';
+      else if (s === 'completed') cls = 'badge-completed';
+      else if (s === 'cancelled') cls = 'badge-cancelled';
+      return '<span class="badge-status ' + cls + '">' + status + '</span>';
+    }
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('campusx_token_organizer');
+      window.location.href = '../index.html';
+    });
+
+    (async function init() {
+      const payload = parseJWT(token);
+      if (!payload || !payload.id) {
+        showToast('Invalid session. Please log in again.');
+        setTimeout(() => { window.location.href = '../login.html'; }, 1500);
+        return;
+      }
+      const organizerId = payload.id;
+
+      try {
+        // Fetch organizer profile for name
+        const profileRes = await fetch(API_BASE + '/organizers/' + organizerId, { headers: authHeaders() });
+        if (!profileRes.ok) throw new Error('Failed to load organizer profile.');
+        const profile = await profileRes.json();
+
+        document.getElementById('welcomeHeading').textContent = 'Welcome back, ' + profile.full_name;
+
+        // Fetch all events
+        const eventsRes = await fetch(API_BASE + '/events');
+        if (!eventsRes.ok) throw new Error('Failed to load events.');
+        const allEvents = await eventsRes.json();
+
+        const myEvents = allEvents.filter(ev => ev.organizer_id === organizerId);
+
+        // Compute stats
+        const totalEvents = myEvents.length;
+        const upcoming = myEvents.filter(ev => (ev.status || '').toLowerCase() === 'upcoming');
+        const completed = myEvents.filter(ev => (ev.status || '').toLowerCase() === 'completed');
+        const totalRegistrations = myEvents.reduce((sum, ev) => sum + Number(ev.registered_count || 0), 0);
+
+        document.getElementById('statTotalEvents').textContent = totalEvents;
+        document.getElementById('statUpcoming').textContent = upcoming.length;
+        document.getElementById('statRegistrations').textContent = totalRegistrations;
+        document.getElementById('statCompleted').textContent = completed.length;
+
+        // Render upcoming events list (show upcoming + ongoing, sorted by date)
+        const activeEvents = myEvents.filter(ev => {
+          const s = (ev.status || '').toLowerCase();
+          return s === 'upcoming' || s === 'ongoing';
+        });
+
+        const listEl = document.getElementById('upcomingList');
+        if (activeEvents.length === 0) {
+          listEl.innerHTML = '<div class="empty-state"><p>No upcoming events.</p><p><a href="create-event.html" class="btn" style="display:inline-flex; margin-top:0.5rem;">Create Your First Event</a></p></div>';
+          return;
+        }
+
+        listEl.innerHTML = '';
+        activeEvents.forEach(ev => {
+          const row = document.createElement('div');
+          row.className = 'event-row';
+          row.innerHTML =
+            '<div class="event-row-info">' +
+              '<h3>' + ev.title + '</h3>' +
+              '<div class="event-row-meta">' +
+                '<span>' + formatDate(ev.event_date) + '</span>' +
+                '<span>' + formatTime(ev.start_time) + ' - ' + formatTime(ev.end_time) + '</span>' +
+                '<span>' + ev.venue + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="event-row-right">' +
+              '<span class="seats-info">' + ev.registered_count + ' / ' + ev.seat_limit + ' seats</span>' +
+              getStatusBadge(ev.status) +
+            '</div>';
+          listEl.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Something went wrong.');
+      }
+    })();
+  </script>
+</body>
+</html>

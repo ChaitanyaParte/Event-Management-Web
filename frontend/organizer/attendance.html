@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" data-page="organizer-attendance">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance | CampusX Events</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .nav-links a.active {
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+    .logout-link {
+      color: #f87171 !important;
+    }
+    .selector-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .selector-row label {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .selector-row select {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-light);
+      font: inherit;
+      min-width: 280px;
+    }
+    .selector-row select:focus {
+      outline: 2px solid rgba(167, 139, 250, 0.4);
+      border-color: rgba(167, 139, 250, 0.7);
+    }
+    .attendance-table-wrap {
+      overflow-x: auto;
+    }
+    .attendance-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .attendance-table th,
+    .attendance-table td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+    }
+    .attendance-table th {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+    }
+    .attendance-table td {
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    .attendance-table tr:last-child td {
+      border-bottom: none;
+    }
+    .badge-present {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .badge-absent {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .mark-section {
+      margin-top: 2rem;
+    }
+    .mark-section h3 {
+      margin: 0 0 1rem;
+      font-size: 1.15rem;
+    }
+    .mark-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .mark-form .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .mark-form label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+    .mark-form input,
+    .mark-form select {
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-light);
+      font: inherit;
+    }
+    .mark-form input:focus,
+    .mark-form select:focus {
+      outline: 2px solid rgba(167, 139, 250, 0.4);
+      border-color: rgba(167, 139, 250, 0.7);
+    }
+    .btn-sm {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.85rem;
+      border-radius: 999px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+    }
+    .feedback {
+      padding: 0.9rem 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      display: none;
+    }
+    .feedback-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .feedback-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .summary-row {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+    .summary-item {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+    .summary-item strong {
+      color: var(--text-light);
+    }
+  </style>
+</head>
+<body>
+  <header class="container page-header" style="padding: 1.5rem 0;">
+    <a href="../index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="organizer-dashboard.html">Dashboard</a>
+      <a href="create-event.html">Create Event</a>
+      <a href="manage-events.html">Manage Events</a>
+      <a href="attendance.html" class="active">Attendance</a>
+      <a href="profile.html">Profile</a>
+      <a href="#" id="logoutBtn" class="logout-link">Logout</a>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0 4rem;">
+    <div class="page-header">
+      <div>
+        <h1>Attendance</h1>
+        <p class="section-subtitle">View and mark attendance for your events.</p>
+      </div>
+    </div>
+
+    <div class="feedback feedback-success" id="successMsg"></div>
+    <div class="feedback feedback-error" id="errorMsg"></div>
+
+    <div class="selector-row">
+      <label for="eventSelect">Select Event:</label>
+      <select id="eventSelect">
+        <option value="">Loading your events...</option>
+      </select>
+    </div>
+
+    <div id="attendanceContent" style="display: none;">
+      <div class="summary-row" id="summaryRow"></div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+        <p class="section-subtitle" style="margin: 0;">Mark each registered student Present or Absent. Certificates are issued to students marked Present.</p>
+        <button type="button" class="btn-sm" id="issueCertsBtn">Issue Certificates</button>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="attendance-table-wrap">
+          <table class="attendance-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Roll Number</th>
+                <th>Department</th>
+                <th>Attendance</th>
+                <th>Mark</th>
+                <th>Certificate</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceBody">
+              <tr><td colspan="6" class="empty-state">Select an event to view its students.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="noEventSelected" class="empty-state">
+      <p>Select one of your events from the dropdown above to view or manage attendance records.</p>
+    </div>
+  </main>
+
+  <footer style="padding: 2rem 0;">
+    <div class="container footer-grid">
+      <div><h3>CampusX Events</h3></div>
+      <div><a href="../index.html">Home</a><br /><a href="../events.html">Events</a></div>
+    </div>
+  </footer>
+
+  <script src="../assets/scripts.js"></script>
+  <script>
+
+
+    const token = localStorage.getItem('campusx_token_organizer');
+    if (!token) {
+      window.location.href = '../login.html';
+    }
+
+    function parseJWT(t) {
+      try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
+    }
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    }
+
+    function showFeedback(type, msg) {
+      const sEl = document.getElementById('successMsg');
+      const eEl = document.getElementById('errorMsg');
+      sEl.style.display = 'none';
+      eEl.style.display = 'none';
+      if (type === 'success') { sEl.textContent = msg; sEl.style.display = 'block'; }
+      else { eEl.textContent = msg; eEl.style.display = 'block'; }
+      setTimeout(() => { sEl.style.display = 'none'; eEl.style.display = 'none'; }, 4000);
+    }
+
+    function formatTimestamp(ts) {
+      if (!ts) return '--';
+      const d = new Date(ts);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) +
+        ' ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('campusx_token_organizer');
+      window.location.href = '../index.html';
+    });
+
+    let organizerId = null;
+    let myEvents = [];
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text == null ? '' : text;
+      return div.innerHTML;
+    }
+
+    function currentEventId() {
+      return document.getElementById('eventSelect').value;
+    }
+
+    async function loadRoster(eventId) {
+      const tbody = document.getElementById('attendanceBody');
+      const summaryRow = document.getElementById('summaryRow');
+      const content = document.getElementById('attendanceContent');
+      const noEvent = document.getElementById('noEventSelected');
+
+      if (!eventId) {
+        content.style.display = 'none';
+        noEvent.style.display = 'block';
+        return;
+      }
+
+      content.style.display = 'block';
+      noEvent.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
+
+      try {
+        const res = await fetch(API_BASE + '/registrations/event/' + eventId, { headers: authHeaders() });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to load students.');
+
+        const roster = data.filter(r => r.status === 'Registered');
+        const present = roster.filter(r => r.attendance_status === 'Present').length;
+        const absent = roster.filter(r => r.attendance_status === 'Absent').length;
+        summaryRow.innerHTML =
+          '<div class="summary-item">Registered: <strong>' + roster.length + '</strong></div>' +
+          '<div class="summary-item">Present: <strong style="color:var(--success);">' + present + '</strong></div>' +
+          '<div class="summary-item">Absent: <strong style="color:#f87171;">' + absent + '</strong></div>' +
+          '<div class="summary-item">Not marked: <strong>' + (roster.length - present - absent) + '</strong></div>';
+
+        if (roster.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No students have registered for this event yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = roster.map(r => {
+          let badge = '<span class="form-note">Not marked</span>';
+          if (r.attendance_status === 'Present') badge = '<span class="badge-present">Present</span>';
+          if (r.attendance_status === 'Absent') badge = '<span class="badge-absent">Absent</span>';
+          return '<tr>' +
+            '<td>' + escapeHtml(r.student_name) + '</td>' +
+            '<td>' + escapeHtml(r.roll_number) + '</td>' +
+            '<td>' + escapeHtml(r.department) + '</td>' +
+            '<td>' + badge + '</td>' +
+            '<td>' +
+              '<button type="button" class="btn-sm" data-reg="' + r.registration_id + '" data-status="Present" style="margin-right:0.4rem;">Present</button>' +
+              '<button type="button" class="btn-sm" data-reg="' + r.registration_id + '" data-status="Absent" style="background:rgba(239,68,68,0.85);">Absent</button>' +
+            '</td>' +
+            '<td>' + (r.certificate_id ? '<span class="badge-present">Issued</span>' : '--') + '</td>' +
+          '</tr>';
+        }).join('');
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">' + escapeHtml(err.message) + '</td></tr>';
+      }
+    }
+
+    async function markAttendance(registrationId, status) {
+      try {
+        const res = await fetch(API_BASE + '/attendance', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ registration_id: registrationId, attendance_status: status }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to mark attendance.');
+        showFeedback('success', 'Marked ' + status + '.');
+        await loadRoster(currentEventId());
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', err.message);
+      }
+    }
+
+    async function issueCertificates() {
+      const btn = document.getElementById('issueCertsBtn');
+      btn.disabled = true;
+      btn.textContent = 'Issuing...';
+      try {
+        const res = await fetch(API_BASE + '/certificates/issue', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ event_id: Number(currentEventId()) }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to issue certificates.');
+        showFeedback('success', data.message);
+        await loadRoster(currentEventId());
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Issue Certificates';
+      }
+    }
+
+    document.getElementById('eventSelect').addEventListener('change', (e) => loadRoster(e.target.value));
+    document.getElementById('issueCertsBtn').addEventListener('click', issueCertificates);
+    document.getElementById('attendanceBody').addEventListener('click', (e) => {
+      const button = e.target.closest('button[data-reg]');
+      if (button) markAttendance(Number(button.dataset.reg), button.dataset.status);
+    });
+
+    (async function init() {
+      const payload = parseJWT(token);
+      if (!payload || !payload.id) {
+        window.location.href = '../login.html';
+        return;
+      }
+      organizerId = payload.id;
+
+      try {
+        const res = await fetch(API_BASE + '/events');
+        if (!res.ok) throw new Error('Failed to load events.');
+        const allEvents = await res.json();
+        myEvents = allEvents.filter(ev => ev.organizer_id === organizerId);
+
+        const select = document.getElementById('eventSelect');
+        if (myEvents.length === 0) {
+          select.innerHTML = '<option value="">No events found</option>';
+          return;
+        }
+        select.innerHTML = '<option value="">-- Choose an event --</option>';
+        myEvents.forEach(ev => {
+          const opt = document.createElement('option');
+          opt.value = ev.event_id;
+          opt.textContent = ev.title + ' (' + formatDate(ev.event_date) + ' - ' + ev.status + ')';
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', 'Could not load events.');
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" data-page="student-dashboard">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard | CampusX Events</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .student-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.5rem 0;
+    }
+    .student-nav .nav-links a.active {
+      color: var(--primary-light);
+    }
+    .logout-btn {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      transform: translateY(-1px);
+    }
+    .greeting {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 0 0 0.25rem;
+    }
+    .greeting-sub {
+      color: var(--text-muted);
+      margin: 0 0 2rem;
+    }
+    .upcoming-section {
+      margin-top: 2.5rem;
+    }
+    .upcoming-section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+    .upcoming-event-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.2s;
+    }
+    .upcoming-event-item:hover {
+      border-color: rgba(167, 139, 250, 0.3);
+    }
+    .upcoming-event-info h4 {
+      margin: 0 0 0.3rem;
+      font-size: 1.05rem;
+    }
+    .upcoming-event-meta {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .badge-upcoming {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .badge-ongoing {
+      background: rgba(249, 115, 22, 0.15);
+      color: #fb923c;
+      border-color: rgba(249, 115, 22, 0.3);
+    }
+    .badge-registered {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--primary-light);
+      border-color: rgba(124, 58, 237, 0.3);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-state p {
+      margin-bottom: 1rem;
+    }
+    .toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .toast {
+      padding: 0.85rem 1.25rem;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.success { background: rgba(16, 185, 129, 0.9); }
+    .toast.error { background: rgba(239, 68, 68, 0.9); }
+    .toast.info { background: rgba(124, 58, 237, 0.9); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header class="container student-nav">
+    <a href="../index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="student-dashboard.html" class="active">Dashboard</a>
+      <a href="my-events.html">My Events</a>
+      <a href="profile.html">Profile</a>
+      <a href="certificates.html">Certificates</a>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0 4rem;">
+    <h1 class="greeting" id="greetingText">Welcome!</h1>
+    <p class="greeting-sub">Here is an overview of your event activity.</p>
+
+    <div class="grid stats-grid">
+      <div class="card stat-card">
+        <span id="statUpcoming">--</span>
+        <p>Upcoming Events</p>
+      </div>
+      <div class="card stat-card">
+        <span id="statTotal">--</span>
+        <p>Total Registrations</p>
+      </div>
+      <div class="card stat-card">
+        <span id="statAttended">--</span>
+        <p>Attended Events</p>
+      </div>
+      <div class="card stat-card">
+        <span id="statCertificates">--</span>
+        <p>Certificates</p>
+      </div>
+    </div>
+
+    <section class="upcoming-section">
+      <h2>Upcoming Registered Events</h2>
+      <div id="upcomingList">
+        <div class="empty-state"><p>Loading...</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer style="padding: 2rem 0;">
+    <div class="container footer-grid">
+      <div><h3>CampusX Events</h3></div>
+      <div><a href="../index.html">Home</a><br /><a href="../events.html">Events</a></div>
+    </div>
+  </footer>
+
+  <script src="../assets/scripts.js"></script>
+  <script>
+
+    const token = localStorage.getItem('campusx_token_student');
+
+    // Auth guard
+    if (!token) {
+      location.href = '../login.html';
+    }
+
+    // Parse JWT
+    function getStudentId() {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id;
+      } catch (e) {
+        localStorage.removeItem('campusx_token_student');
+        location.href = '../login.html';
+      }
+    }
+
+    const studentId = getStudentId();
+
+    // Toast helper
+    function showToast(message, type = 'info') {
+      let container = document.querySelector('.toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // Fetch helper
+    async function apiFetch(url, options = {}) {
+      const headers = {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+      const response = await fetch(API_BASE + url, { ...options, headers });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(err.message || 'API Error');
+      }
+      return response.json();
+    }
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('campusx_token_student');
+      location.href = '../index.html';
+    });
+
+    // Load dashboard data
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        // Fetch profile for greeting
+        const profile = await apiFetch('/students/' + studentId);
+        document.getElementById('greetingText').textContent = 'Welcome, ' + (profile.full_name || 'Student') + '!';
+      } catch (err) {
+        document.getElementById('greetingText').textContent = 'Welcome!';
+      }
+
+      try {
+        // Fetch registrations
+        const registrations = await apiFetch('/registrations/student/' + studentId);
+
+        // Calculate stats
+        const upcoming = registrations.filter(r =>
+          r.status === 'Registered' && (r.event_status === 'Upcoming' || r.event_status === 'Ongoing')
+        );
+        const totalRegs = registrations.length;
+        const attended = registrations.filter(r => r.attendance_status === 'Present');
+        const certificates = registrations.filter(r => r.certificate_id).length;
+
+        document.getElementById('statUpcoming').textContent = upcoming.length;
+        document.getElementById('statTotal').textContent = totalRegs;
+        document.getElementById('statAttended').textContent = attended.length;
+        document.getElementById('statCertificates').textContent = certificates;
+
+        // Render upcoming events list
+        const listEl = document.getElementById('upcomingList');
+        if (upcoming.length === 0) {
+          listEl.innerHTML = '<div class="empty-state"><p>No upcoming registered events.</p><a href="../events.html" class="btn" style="font-size:0.9rem; padding:0.6rem 1.2rem;">Browse Events</a></div>';
+          return;
+        }
+
+        listEl.innerHTML = upcoming.map(r => {
+          const statusClass = r.event_status === 'Ongoing' ? 'badge-ongoing' : 'badge-upcoming';
+          return '<div class="upcoming-event-item">' +
+            '<div class="upcoming-event-info">' +
+              '<h4>' + escapeHtml(r.title) + '</h4>' +
+              '<div class="upcoming-event-meta">' +
+                '<span>' + formatDate(r.event_date) + '</span>' +
+                '<span>' + escapeHtml(r.venue || 'TBD') + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display:flex; gap:0.5rem; align-items:center;">' +
+              '<span class="badge ' + statusClass + '">' + r.event_status + '</span>' +
+              '<span class="badge badge-registered">Registered</span>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch (err) {
+        document.getElementById('upcomingList').innerHTML =
+          '<div class="empty-state"><p>Failed to load registrations. Please try again later.</p></div>';
+        showToast('Failed to load data: ' + err.message, 'error');
+      }
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

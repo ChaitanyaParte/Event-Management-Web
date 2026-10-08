@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" data-page="manage-registrations">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Registrations | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item active" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Manage Registrations</h1>
+      <p class="section-subtitle">View and manage event registrations</p>
+    </header>
+
+    <section class="form-section">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by student or event name">
+        <select class="select-input" id="statusFilter">
+          <option value="">All Status</option>
+          <option value="Registered">Registered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <button class="search-button" id="searchBtn">Search</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Event</th>
+              <th>Registration Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="registrationsTable">
+            <tr><td colspan="5" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const loadRegistrations = async () => {
+        try {
+          const data = await window.adminAPI.fetchAdmin('/admin/registrations');
+          const tbody = document.getElementById('registrationsTable');
+          const statusBadge = (status) => `<span class="badge status-${status.toLowerCase()}">${status}</span>`;
+          
+          tbody.innerHTML = data.map(reg => `
+            <tr>
+              <td>${reg.student_name}</td>
+              <td>${reg.event_title}</td>
+              <td>${window.adminAPI.formatDate(reg.registration_date)}</td>
+              <td>${statusBadge(reg.status)}</td>
+              <td class="action-buttons">
+                <button class="btn-small btn-primary-small" onclick="viewRegistration(${reg.registration_id})">View</button>
+                ${reg.status === 'Registered' ? `<button class="btn-small btn-danger-small" onclick="window.adminAPI.cancelRegistration(${reg.registration_id})">Cancel</button>` : ''}
+              </td>
+            </tr>
+          `).join('');
+        } catch (error) {
+          document.getElementById('registrationsTable').innerHTML = '<tr><td colspan="5" class="text-center">Failed to load</td></tr>';
+        }
+      };
+
+      window.viewRegistration = async (regId) => {
+        try {
+          const reg = await window.adminAPI.fetchAdmin(`/admin/registrations/${regId}`);
+          alert(`Registration Details:\n\nStudent: ${reg.student_name}\nEmail: ${reg.email}\nEvent: ${reg.event_title}\nDate: ${window.adminAPI.formatDate(reg.registration_date)}\nStatus: ${reg.status}`);
+        } catch (error) {
+          window.adminAPI.showToast('Failed to load registration details', 'error');
+        }
+      };
+
+      document.getElementById('searchBtn').addEventListener('click', loadRegistrations);
+      loadRegistrations();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" data-page="manage-categories">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Categories | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item active" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Manage Categories</h1>
+      <p class="section-subtitle">Add, edit, and manage event categories</p>
+    </header>
+
+    <section class="form-section">
+      <h3>Add New Category</h3>
+      <form id="addCategoryForm" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+        <input type="text" id="categoryName" placeholder="Category name" required style="padding: 0.75rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e6eef8;">
+        <button type="submit" class="search-button">Add Category</button>
+      </form>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Category Name</th>
+              <th>Events Count</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="categoriesTable">
+            <tr><td colspan="3" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const loadCategories = async () => {
+        try {
+          const data = await window.adminAPI.fetchAdmin('/admin/categories');
+          const tbody = document.getElementById('categoriesTable');
+          tbody.innerHTML = data.map(cat => `
+            <tr>
+              <td>${cat.category_name}</td>
+              <td>${cat.events_count}</td>
+              <td class="action-buttons">
+                <button class="btn-small btn-primary-small" onclick="editCategory(${cat.category_id}, '${cat.category_name}')">Edit</button>
+                <button class="btn-small btn-danger-small" onclick="deleteCategory(${cat.category_id}, '${cat.category_name}')">Delete</button>
+              </td>
+            </tr>
+          `).join('');
+        } catch (error) {
+          document.getElementById('categoriesTable').innerHTML = '<tr><td colspan="3" class="text-center">Failed to load</td></tr>';
+        }
+      };
+
+      window.editCategory = async (categoryId, name) => {
+        const newName = prompt('Edit category name:', name);
+        if (!newName) return;
+        try {
+          await window.adminAPI.fetchAdmin(`/admin/categories/${categoryId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ category_name: newName })
+          });
+          window.adminAPI.showToast('Category updated successfully', 'success');
+          loadCategories();
+        } catch (error) {
+          window.adminAPI.showToast('Failed to update category: ' + error.message, 'error');
+        }
+      };
+
+      window.deleteCategory = async (categoryId, name) => {
+        if (!confirm(`Delete "${name}" category?`)) return;
+        try {
+          await window.adminAPI.fetchAdmin(`/admin/categories/${categoryId}`, { method: 'DELETE' });
+          window.adminAPI.showToast('Category deleted successfully', 'success');
+          loadCategories();
+        } catch (error) {
+          window.adminAPI.showToast('Failed: ' + error.message, 'error');
+        }
+      };
+
+      document.getElementById('addCategoryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('categoryName').value.trim();
+        if (!name) {
+          window.adminAPI.showToast('Category name is required', 'error');
+          return;
+        }
+        try {
+          await window.adminAPI.fetchAdmin('/admin/categories', {
+            method: 'POST',
+            body: JSON.stringify({ category_name: name })
+          });
+          window.adminAPI.showToast('Category created successfully', 'success');
+          document.getElementById('categoryName').value = '';
+          loadCategories();
+        } catch (error) {
+          window.adminAPI.showToast('Failed: ' + error.message, 'error');
+        }
+      });
+
+      loadCategories();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-page="login">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | CampusX Events</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="container page-header">
+    <a href="index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="events.html">Events</a>
+      <a href="register.html" class="btn">Register</a>
+    </nav>
+  </header>
+
+  <main class="container auth-shell">
+    <div class="card auth-card">
+      <h2 id="login-form-title">Student Login</h2>
+      <p class="section-subtitle">Login to continue managing campus events and registrations.</p>
+
+      <form class="form-grid" data-login-form>
+        <div class="login-role-toggle" aria-label="Login role selection" style="grid-template-columns: 1fr 1fr 1fr;">
+          <button type="button" class="login-role-option is-active" data-role="student">Student</button>
+          <button type="button" class="login-role-option" data-role="organizer">Organizer</button>
+          <button type="button" class="login-role-option" data-role="admin">Admin</button>
+        </div>
+        <input type="hidden" name="role" id="login-role" value="student" />
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="password" name="password" placeholder="Password" required />
+        <button class="btn" type="submit" id="login-submit-btn">Login</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container footer-grid">
+      <div>
+        <h3>CampusX Events</h3>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="events.html">Events</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/scripts.js"></script>
+</body>
+</html>

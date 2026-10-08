@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" data-page="student-my-events">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Events | CampusX Events</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .student-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.5rem 0;
+    }
+    .student-nav .nav-links a.active {
+      color: var(--primary-light);
+    }
+    .logout-btn {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      transform: translateY(-1px);
+    }
+    .browse-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .browse-bar .btn {
+      font-size: 0.9rem;
+      padding: 0.6rem 1.2rem;
+    }
+    .events-table-wrapper {
+      overflow-x: auto;
+      border-radius: var(--radius);
+    }
+    .events-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .events-table th,
+    .events-table td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .events-table th {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .events-table tr:last-child td {
+      border-bottom: none;
+    }
+    .events-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .badge-registered {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--primary-light);
+      border-color: rgba(124, 58, 237, 0.3);
+    }
+    .badge-cancelled {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .badge-upcoming {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .badge-ongoing {
+      background: rgba(249, 115, 22, 0.15);
+      color: #fb923c;
+      border-color: rgba(249, 115, 22, 0.3);
+    }
+    .badge-completed {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    .badge-event-cancelled {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    .btn-cancel-reg {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-cancel-reg:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+    .btn-cancel-reg:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-state p {
+      margin-bottom: 1rem;
+    }
+    .toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .toast {
+      padding: 0.85rem 1.25rem;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.success { background: rgba(16, 185, 129, 0.9); }
+    .toast.error { background: rgba(239, 68, 68, 0.9); }
+    .toast.info { background: rgba(124, 58, 237, 0.9); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    /* Mobile card view */
+    @media (max-width: 768px) {
+      .events-table thead { display: none; }
+      .events-table, .events-table tbody, .events-table tr, .events-table td {
+        display: block;
+        width: 100%;
+      }
+      .events-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .events-table td {
+        padding: 0.75rem 1rem;
+        text-align: right;
+        border-bottom: 1px solid var(--border);
+      }
+      .events-table td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+      }
+      .events-table td:last-child {
+        border-bottom: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="container student-nav">
+    <a href="../index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="student-dashboard.html">Dashboard</a>
+      <a href="my-events.html" class="active">My Events</a>
+      <a href="profile.html">Profile</a>
+      <a href="certificates.html">Certificates</a>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0 4rem;">
+    <div class="page-header">
+      <div>
+        <h1>My Registered Events</h1>
+        <p class="section-subtitle">View your current event registrations and manage them.</p>
+      </div>
+    </div>
+
+    <div class="browse-bar">
+      <p style="color: var(--text-muted); margin: 0;">Showing all your registrations</p>
+      <a href="../events.html" class="btn">Browse Events</a>
+    </div>
+
+    <div id="eventsContainer">
+      <div class="empty-state"><p>Loading...</p></div>
+    </div>
+  </main>
+
+  <footer style="padding: 2rem 0;">
+    <div class="container footer-grid">
+      <div><h3>CampusX Events</h3></div>
+      <div><a href="../index.html">Home</a><br /><a href="../events.html">Events</a></div>
+    </div>
+  </footer>
+
+  <script src="../assets/scripts.js"></script>
+  <script>
+
+    const token = localStorage.getItem('campusx_token_student');
+
+    if (!token) {
+      location.href = '../login.html';
+    }
+
+    function getStudentId() {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id;
+      } catch (e) {
+        localStorage.removeItem('campusx_token_student');
+        location.href = '../login.html';
+      }
+    }
+
+    const studentId = getStudentId();
+
+    function showToast(message, type = 'info') {
+      let container = document.querySelector('.toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    async function apiFetch(url, options = {}) {
+      const headers = {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+      const response = await fetch(API_BASE + url, { ...options, headers });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(err.message || 'API Error');
+      }
+      return response.json();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function getRegStatusBadge(status) {
+      if (status === 'Registered') return '<span class="badge badge-registered">Registered</span>';
+      if (status === 'Cancelled') return '<span class="badge badge-cancelled">Cancelled</span>';
+      return '<span class="badge">' + escapeHtml(status) + '</span>';
+    }
+
+    function getEventStatusBadge(status) {
+      const map = {
+        'Upcoming': 'badge-upcoming',
+        'Ongoing': 'badge-ongoing',
+        'Completed': 'badge-completed',
+        'Cancelled': 'badge-event-cancelled'
+      };
+      const cls = map[status] || '';
+      return '<span class="badge ' + cls + '">' + escapeHtml(status) + '</span>';
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('campusx_token_student');
+      location.href = '../index.html';
+    });
+
+    async function cancelRegistration(regId, btnEl) {
+      if (!confirm('Are you sure you want to cancel this registration?')) return;
+      btnEl.disabled = true;
+      btnEl.textContent = 'Cancelling...';
+      try {
+        await apiFetch('/registrations/' + regId, { method: 'DELETE' });
+        showToast('Registration cancelled successfully.', 'success');
+        loadRegistrations();
+      } catch (err) {
+        showToast('Failed to cancel: ' + err.message, 'error');
+        btnEl.disabled = false;
+        btnEl.textContent = 'Cancel';
+      }
+    }
+
+    async function loadRegistrations() {
+      const container = document.getElementById('eventsContainer');
+      try {
+        const registrations = await apiFetch('/registrations/student/' + studentId);
+
+        if (registrations.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>You have no event registrations yet.</p><a href="../events.html" class="btn" style="font-size:0.9rem; padding:0.6rem 1.2rem;">Browse Events</a></div>';
+          return;
+        }
+
+        let html = '<div class="events-table-wrapper"><table class="events-table"><thead><tr>' +
+          '<th>Event</th><th>Date</th><th>Venue</th><th>Category</th><th>Reg. Status</th><th>Event Status</th><th>Action</th>' +
+          '</tr></thead><tbody>';
+
+        registrations.forEach(r => {
+          const canCancel = r.status === 'Registered' && r.event_status !== 'Completed' && r.event_status !== 'Cancelled';
+          html += '<tr>' +
+            '<td data-label="Event">' + escapeHtml(r.title) + '</td>' +
+            '<td data-label="Date">' + formatDate(r.event_date) + '</td>' +
+            '<td data-label="Venue">' + escapeHtml(r.venue || 'TBD') + '</td>' +
+            '<td data-label="Category">' + escapeHtml(r.category_name || '--') + '</td>' +
+            '<td data-label="Reg. Status">' + getRegStatusBadge(r.status) + '</td>' +
+            '<td data-label="Event Status">' + getEventStatusBadge(r.event_status) + '</td>' +
+            '<td data-label="Action">' +
+              (canCancel
+                ? '<button class="btn-cancel-reg" onclick="cancelRegistration(' + r.registration_id + ', this)">Cancel</button>'
+                : '<span style="color: var(--text-muted); font-size: 0.85rem;">--</span>') +
+            '</td>' +
+          '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = '<div class="empty-state"><p>Failed to load registrations. Please try again later.</p></div>';
+        showToast('Failed to load registrations: ' + err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadRegistrations);
+  </script>
+</body>
+</html>

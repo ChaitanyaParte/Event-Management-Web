@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" data-page="manage-attendance">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Attendance | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item active" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Manage Attendance</h1>
+      <p class="section-subtitle">Track and correct attendance records</p>
+    </header>
+
+    <section class="form-section">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by student or event name">
+        <select class="select-input" id="statusFilter">
+          <option value="">All Status</option>
+          <option value="Present">Present</option>
+          <option value="Absent">Absent</option>
+        </select>
+        <button class="search-button" id="searchBtn">Search</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Event</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Marked By</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceTable">
+            <tr><td colspan="6" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const loadAttendance = async () => {
+        try {
+          const data = await window.adminAPI.fetchAdmin('/admin/attendance');
+          const tbody = document.getElementById('attendanceTable');
+          const statusBadge = (status) => `<span class="badge status-${status.toLowerCase()}">${status}</span>`;
+          
+          tbody.innerHTML = data.map(att => `
+            <tr>
+              <td>${att.student_name}</td>
+              <td>${att.event_title}</td>
+              <td>${statusBadge(att.attendance_status)}</td>
+              <td>${window.adminAPI.formatDate(att.attendance_date)}</td>
+              <td>${att.marked_by || 'System'}</td>
+              <td class="action-buttons">
+                <button class="btn-small btn-primary-small" onclick="updateAttendance(${att.attendance_id}, '${att.attendance_status}')">Change</button>
+              </td>
+            </tr>
+          `).join('');
+        } catch (error) {
+          document.getElementById('attendanceTable').innerHTML = '<tr><td colspan="6" class="text-center">Failed to load</td></tr>';
+        }
+      };
+
+      window.updateAttendance = async (attendanceId, currentStatus) => {
+        const newStatus = prompt(`Current: ${currentStatus}\nNew status (Present/Absent):`, currentStatus);
+        if (!newStatus || !['Present', 'Absent'].includes(newStatus)) return;
+        try {
+          await window.adminAPI.fetchAdmin(`/admin/attendance/${attendanceId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ attendance_status: newStatus })
+          });
+          window.adminAPI.showToast('Attendance updated successfully', 'success');
+          loadAttendance();
+        } catch (error) {
+          window.adminAPI.showToast('Failed to update: ' + error.message, 'error');
+        }
+      };
+
+      document.getElementById('searchBtn').addEventListener('click', loadAttendance);
+      loadAttendance();
+    });
+  </script>
+</body>
+</html>

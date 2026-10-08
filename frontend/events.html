@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" data-page="events">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Events | CampusX Events</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="container page-header">
+    <a href="index.html" class="brand"><strong>CampusX</strong> Events</a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="events.html">Events</a>
+      <a href="login.html">Login</a>
+      <a href="register.html" class="btn">Register</a>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0;">
+    <div class="card hero-card">
+      <h2>Search Events</h2>
+      <form id="event-filter-form" class="form-grid">
+        <select id="category-filter">
+          <option value="">All Categories</option>
+        </select>
+        <input id="venue-filter" type="text" placeholder="Venue" />
+        <input id="date-filter" type="date" />
+        <input id="search-input" type="text" placeholder="Search events" />
+        <button class="btn" type="submit">Apply Filters</button>
+      </form>
+    </div>
+
+    <section style="padding-top: 2rem;">
+      <div class="section-header">
+        <div>
+          <h2>All Events</h2>
+          <p class="section-subtitle">Explore every campus experience available now.</p>
+        </div>
+      </div>
+      <div id="events-list" class="events-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-grid">
+      <div>
+        <h3>CampusX Events</h3>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="events.html">Events</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/scripts.js"></script>
+</body>
+</html>

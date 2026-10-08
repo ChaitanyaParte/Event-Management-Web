@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CampusHub - Event Management System</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html, body {
+	height: 100%;
+}
+
+:root {
+	--bg-dark: #0f1419;
+	--bg-darker: #0a0e13;
+	--card-bg: #1a1f2e;
+	--text-light: #e6eef8;
+	--text-muted: #8b92a9;
+	--primary: #7c3aed;
+	--primary-light: #a78bfa;
+}
+
+body {
+	background: var(--bg-dark);
+	color: var(--text-light);
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	overflow-x: hidden;
+}
+
+/* LAYOUT */
+.main-container {
+	display: flex;
+	min-height: 100vh;
+}
+
+.sidebar {
+	width: 200px;
+	background: var(--bg-darker);
+	padding: 30px 20px;
+	border-right: 1px solid rgba(255,255,255,0.05);
+	position: fixed;
+	left: 0;
+	top: 0;
+	height: 100vh;
+	overflow-y: auto;
+}
+
+.content-wrapper {
+	flex: 1;
+	margin-left: 200px;
+	display: flex;
+	flex-direction: column;
+}
+
+.navbar-top {
+	background: rgba(10, 14, 19, 0.8);
+	backdrop-filter: blur(10px);
+	border-bottom: 1px solid rgba(255,255,255,0.05);
+	padding: 15px 40px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	position: sticky;
+	top: 0;
+	z-index: 100;
+}
+
+.main-content {
+	display: flex;
+	flex: 1;
+	padding: 0;
+}
+
+.content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 40px;
+}
+
+.right-sidebar {
+	width: 280px;
+	background: var(--bg-darker);
+	border-left: 1px solid rgba(255,255,255,0.05);
+	padding: 30px 20px;
+	overflow-y: auto;
+}
+
+/* SIDEBAR NAVIGATION */
+.sidebar-logo {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 40px;
+	font-weight: bold;
+	font-size: 18px;
+	color: white;
+}
+
+.sidebar-logo i {
+	font-size: 28px;
+	color: var(--primary);
+}
+
+.sidebar-menu {
+	list-style: none;
+}
+
+.sidebar-item {
+	margin-bottom: 20px;
+}
+
+.sidebar-link {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	padding: 12px 15px;
+	border-radius: 10px;
+	color: var(--text-muted);
+	text-decoration: none;
+	transition: 0.3s;
+	font-size: 14px;
+}
+
+.sidebar-link i {
+	font-size: 18px;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+	background: linear-gradient(135deg, #7c3aed, #a78bfa);
+	color: white;
+	transform: translateX(5px);
+}
+
+.sidebar-item:nth-child(1) .sidebar-link {
+	background: linear-gradient(135deg, #7c3aed, #a78bfa);
+	color: white;
+}
+
+/* NAVBAR TOP */
+.navbar-top-left {
+	display: flex;
+	gap: 20px;
+	list-style: none;
+}
+
+.navbar-top-left li a {
+	color: var(--text-light);
+	text-decoration: none;
+	font-size: 14px;
+	transition: 0.3s;
+}
+
+.navbar-top-left li a:hover {
+	color: var(--primary-light);
+}
+
+.navbar-top-right {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+}
+
+.user-profile {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	cursor: pointer;
+}
+
+.user-avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #7c3aed, #a78bfa);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: bold;
+}
+
+.user-name {
+	font-size: 13px;
+}
+
+/* HERO SECTION */
+.hero {
+	background: linear-gradient(180deg, rgba(0, 50, 100, 0.6) 0%, rgba(0, 0, 0, 0.7) 100%), url('../../cultural-fests.jpg') center/cover no-repeat;
+	border-radius: 20px;
+	padding: 60px 40px;
+	margin-bottom: 40px;
+	position: relative;
+	overflow: hidden;
+	min-height: 400px;
+}
+
+.hero-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	position: relative;
+	z-index: 2;
+	gap: 40px;
+}
+
+.hero-content {
+	flex: 1;
+	max-width: 600px;
+}
+
+.hero h1 {
+	font-size: 48px;
+	font-weight: 700;
+	margin-bottom: 10px;
+	line-height: 1.2;
+}
+
+.hero h1 span {
+	background: linear-gradient(135deg, var(--primary), #ec4899);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+.hero p {
+	color: var(--text-muted);
+	font-size: 16px;
+	margin-bottom: 30px;
+	line-height: 1.6;
+}
+
+.hero-buttons {
+	display: flex;
+	gap: 15px;
+}
+
+.btn-hero {
+	padding: 12px 28px;
+	border-radius: 10px;
+	border: none;
+	font-weight: 600;
+	font-size: 14px;
+	cursor: pointer;
+	transition: 0.3s;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	text-decoration: none;
+}
+
+.btn-primary-hero {
+	background: linear-gradient(135deg, var(--primary), #a78bfa);
+	color: white;
+}
+
+.btn-primary-hero:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+}
+
+.btn-secondary-hero {
+	background: rgba(255,255,255,0.1);
+	color: white;
+	border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-secondary-hero:hover {
+	background: rgba(255,255,255,0.15);
+	border-color: rgba(255,255,255,0.3);
+}
+
+/* STATS SECTION */
+.stats-container {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 20px;
+	margin-bottom: 40px;
+}
+
+.stat-card {
+	background: var(--card-bg);
+	border: 1px solid rgba(255,255,255,0.05);
+	border-radius: 15px;
+	padding: 25px;
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	transition: 0.3s;
+	cursor: pointer;
+}
+
+.stat-card:hover {
+	border-color: rgba(255,255,255,0.1);
+	transform: translateY(-5px);
+}
+
+.stat-icon {
+	width: 60px;
+	height: 60px;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 28px;
+	color: white;
+}
+
+.stat-icon.purple {
+	background: linear-gradient(135deg, #7c3aed, #a78bfa);
+}
+
+.stat-icon.blue {
+	background: linear-gradient(135deg, #3b82f6, #60a5fa);
+}
+
+.stat-icon.green {
+	background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+.stat-icon.orange {
+	background: linear-gradient(135deg, #f97316, #fb923c);
+}
+
+.stat-content h3 {
+	font-size: 28px;
+	font-weight: 700;
+	margin-bottom: 5px;
+}
+
+.stat-content p {
+	color: var(--text-muted);
+	font-size: 14px;
+}
+
+/* EVENTS SECTION */
+.section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 30px;
+}
+
+.section-header h2 {
+	font-size: 22px;
+	font-weight: 700;
+}
+
+.view-all {
+	color: var(--primary);
+	text-decoration: none;
+	font-size: 14px;
+	transition: 0.3s;
+}
+
+.view-all:hover {
+	color: var(--primary-light);
+}
+
+.events-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 25px;
+	margin-bottom: 40px;
+}
+
+.event-card {
+	background: var(--card-bg);
+	border-radius: 15px;
+	overflow: hidden;
+	border: 1px solid rgba(255,255,255,0.05);
+	transition: 0.3s;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.event-card:hover {
+	border-color: rgba(255,255,255,0.1);
+	transform: translateY(-10px);
+	box-shadow: 0 20px 40px rgba(124, 58, 237, 0.2);
+}
+
+.event-image {
+	height: 200px;
+	background-size: cover;
+	background-position: center;
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	padding: 15px;
+}
+
+.event-badge {
+	padding: 6px 14px;
+	border-radius: 20px;
+	font-size: 12px;
+	font-weight: bold;
+	color: white;
+}
+
+.badge-popular {
+	background: linear-gradient(135deg, #7c3aed, #a78bfa);
+}
+
+.badge-sports {
+	background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+.badge-cultural {
+	background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.event-body {
+	padding: 20px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.event-title {
+	font-size: 18px;
+	font-weight: 700;
+	margin-bottom: 12px;
+	color: white;
+}
+
+.event-info {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--text-muted);
+	font-size: 13px;
+	margin-bottom: 8px;
+}
+
+.event-info i {
+	color: var(--primary);
+	font-size: 16px;
+}
+
+.event-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: auto;
+	padding-top: 15px;
+	border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.event-participants {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.participant-avatars {
+	display: flex;
+	margin: 0;
+}
+
+.participant-avatars img {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	margin-left: -10px;
+	border: 2px solid var(--card-bg);
+	background: linear-gradient(135deg, #7c3aed, #a78bfa);
+}
+
+.participant-avatars img:first-child {
+	margin-left: 0;
+}
+
+.registered-count {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-light);
+}
+
+.event-action {
+	width: 36px;
+	height: 36px;
+	background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(167, 139, 250, 0.1));
+	border: 1px solid rgba(124, 58, 237, 0.3);
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--primary);
+	font-size: 18px;
+	cursor: pointer;
+	transition: 0.3s;
+}
+
+.event-action:hover {
+	background: linear-gradient(135deg, rgba(124, 58, 237, 0.4), rgba(167, 139, 250, 0.2));
+	transform: translateX(3px);
+}
+
+/* RIGHT SIDEBAR */
+.right-sidebar h3 {
+	font-size: 18px;
+	font-weight: 700;
+	margin-bottom: 15px;
+}
+
+.create-event-box {
+	background: linear-gradient(135deg, #7c3aed, #a78bfa);
+	border-radius: 15px;
+	padding: 30px 25px;
+	text-align: center;
+	min-width: 280px;
+	flex-shrink: 0;
+}
+
+.hero .create-event-box {
+	margin-bottom: 0;
+	box-shadow: 0 10px 40px rgba(124, 58, 237, 0.3);
+}
+
+.create-event-box i {
+	font-size: 48px;
+	margin-bottom: 15px;
+	opacity: 0.8;
+}
+
+.create-event-box h4 {
+	font-size: 16px;
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+.create-event-box p {
+	font-size: 13px;
+	opacity: 0.9;
+	margin-bottom: 15px;
+}
+
+.btn-get-started {
+	background: white;
+	color: #7c3aed;
+	border: none;
+	border-radius: 8px;
+	padding: 10px 20px;
+	font-weight: 600;
+	font-size: 13px;
+	cursor: pointer;
+	transition: 0.3s;
+}
+
+.btn-get-started:hover {
+	transform: scale(1.05);
+}
+
+.calendar {
+	background: var(--card-bg);
+	border: 1px solid rgba(255,255,255,0.05);
+	border-radius: 15px;
+	padding: 20px;
+}
+
+.calendar-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.calendar-header h4 {
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.calendar-nav {
+	display: flex;
+	gap: 10px;
+}
+
+.calendar-nav button {
+	background: none;
+	border: none;
+	color: var(--primary);
+	cursor: pointer;
+	font-size: 18px;
+}
+
+.calendar-weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 8px;
+	margin-bottom: 10px;
+	text-align: center;
+}
+
+.calendar-weekdays span {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	padding: 8px 0;
+}
+
+.calendar-days {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 8px;
+}
+
+.calendar-day {
+	aspect-ratio: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	font-size: 13px;
+	cursor: pointer;
+	transition: 0.3s;
+	background: transparent;
+	border: none;
+	color: var(--text-muted);
+}
+
+.calendar-day:hover {
+	background: rgba(124, 58, 237, 0.2);
+	color: var(--text-light);
+}
+
+.calendar-day.active {
+	background: linear-gradient(135deg, #7c3aed, #a78bfa);
+	color: white;
+	font-weight: bold;
+}
+
+/* FEATURES SECTION */
+.features-section {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 20px;
+	margin-top: 40px;
+}
+
+.feature-card {
+	background: var(--card-bg);
+	border: 1px solid rgba(255,255,255,0.05);
+	border-radius: 12px;
+	padding: 20px;
+	text-align: center;
+	transition: 0.3s;
+}
+
+.feature-card:hover {
+	border-color: rgba(255,255,255,0.1);
+}
+
+.feature-icon {
+	font-size: 36px;
+	margin-bottom: 12px;
+}
+
+.feature-card h4 {
+	font-size: 14px;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+.feature-card p {
+	font-size: 12px;
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(255,255,255,0.1);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(255,255,255,0.2);
+}
+
+/* RESPONSIVE */
+@media (max-width: 1400px) {
+	.events-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 768px) {
+	.sidebar {
+		width: 70px;
+		padding: 20px 15px;
+	}
+	
+	.sidebar-link span {
+		display: none;
+	}
+	
+	.content-wrapper {
+		margin-left: 70px;
+	}
+	
+	.right-sidebar {
+		display: none;
+	}
+	
+	.main-content {
+		flex-direction: column;
+	}
+	
+	.stats-container {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	
+	.events-grid {
+		grid-template-columns: 1fr;
+	}
+	
+	.features-section {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+</style>
+</head>
+<body>
+
+<div class="main-container">
+	
+	<!-- SIDEBAR -->
+	<div class="sidebar">
+		<div class="sidebar-logo">
+			<i class="bi bi-mortarboard"></i>
+			<span>CampusHub</span>
+		</div>
+		
+		<ul class="sidebar-menu">
+			<li class="sidebar-item">
+				<a href="#" class="sidebar-link active">
+					<i class="bi bi-house-fill"></i>
+					<span>Dashboard</span>
+				</a>
+			</li>
+			<li class="sidebar-item">
+				<a href="#" class="sidebar-link">
+					<i class="bi bi-calendar-event"></i>
+					<span>Events</span>
+				</a>
+			</li>
+			<li class="sidebar-item">
+				<a href="#" class="sidebar-link">
+					<i class="bi bi-bookmark"></i>
+					<span>My Registrations</span>
+				</a>
+			</li>
+			<li class="sidebar-item">
+				<a href="#" class="sidebar-link">
+					<i class="bi bi-people"></i>
+					<span>Clubs</span>
+				</a>
+			</li>
+			<li class="sidebar-item">
+				<a href="#" class="sidebar-link">
+					<i class="bi bi-bell"></i>
+					<span>Notifications</span>
+				</a>
+			</li>
+			<li class="sidebar-item">
+				<a href="#" class="sidebar-link">
+					<i class="bi bi-person"></i>
+					<span>Profile</span>
+				</a>
+			</li>
+			<li class="sidebar-item">
+				<a href="#" class="sidebar-link">
+					<i class="bi bi-gear"></i>
+					<span>Settings</span>
+				</a>
+			</li>
+			<li class="sidebar-item">
+				<a href="#" class="sidebar-link">
+					<i class="bi bi-box-arrow-left"></i>
+					<span>Logout</span>
+				</a>
+			</li>
+		</ul>
+	</div>
+	
+	<!-- CONTENT -->
+	<div class="content-wrapper">
+		
+		<!-- TOP NAVBAR -->
+		<div class="navbar-top">
+			<ul class="navbar-top-left">
+				<li><a href="#">Home</a></li>
+				<li><a href="#">Events</a></li>
+				<li><a href="#">My Registrations</a></li>
+				<li><a href="#">Clubs</a></li>
+				<li><a href="#">About Us</a></li>
+				<li><a href="#">Contact</a></li>
+			</ul>
+			
+			<div class="navbar-top-right">
+				<div style="position: relative; cursor: pointer;">
+					<i class="bi bi-bell" style="font-size: 20px;"></i>
+					<span style="position: absolute; top: -5px; right: -5px; background: #f97316; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">3</span>
+				</div>
+				<div class="user-profile">
+					<div class="user-avatar">P</div>
+					<div class="user-name">Pranav<br><span style="font-size: 12px; color: var(--text-muted);">Student</span></div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- MAIN CONTENT + RIGHT SIDEBAR -->
+		<div class="main-content">
+			
+			<div class="content">
+				
+				<!-- HERO SECTION -->
+				<div class="hero">
+				<div class="hero-wrapper">
+					<div class="hero-content">
+						<h1>Make Every Event <span>Unforgettable</span></h1>
+						<p>Discover, participate and manage amazing college events all in one place.</p>
+						<div class="hero-buttons">
+							<a href="#" class="btn-hero btn-primary-hero">
+								<i class="bi bi-arrow-right"></i>
+								Explore Events
+							</a>
+						</div>
+					</div>
+					<div class="create-event-box">
+						<div style="font-size: 36px; margin-bottom: 10px;">📅</div>
+						<h4>Upcoming Event</h4>
+						<p style="margin-bottom: 12px; font-size: 13px; margin-top: 8px;">TechFest 2K24</p>
+						<div style="margin-bottom: 15px;">
+							<div style="font-size: 12px; color: white; opacity: 0.9;">📅 20-22 May, 2024</div>
+							<div style="font-size: 12px; color: white; opacity: 0.9; margin-top: 5px;">📍 Main Auditorium</div>
+						</div>
+						<button class="btn-get-started">View Details</button>
+					</div>
+				</div>
+				</div>
+				
+				<div class="stats-container">
+					<div class="stat-card">
+						<div class="stat-icon purple">
+							<i class="bi bi-calendar-event"></i>
+						</div>
+						<div class="stat-content">
+							<h3>24</h3>
+							<p>Upcoming Events</p>
+						</div>
+					</div>
+					
+					<div class="stat-card">
+						<div class="stat-icon blue">
+							<i class="bi bi-people"></i>
+						</div>
+						<div class="stat-content">
+							<h3>12</h3>
+							<p>Clubs Active</p>
+						</div>
+					</div>
+					
+					<div class="stat-card">
+						<div class="stat-icon green">
+							<i class="bi bi-bookmark"></i>
+						</div>
+						<div class="stat-content">
+							<h3>156</h3>
+							<p>My Registrations</p>
+						</div>
+					</div>
+					
+					<div class="stat-card">
+						<div class="stat-icon orange">
+							<i class="bi bi-star"></i>
+						</div>
+						<div class="stat-content">
+							<h3>8</h3>
+							<p>Certificates Earned</p>
+						</div>
+					</div>
+				</div>
+				
+				<!-- EVENTS SECTION -->
+				<div class="section-header">
+					<h2>Upcoming Events</h2>
+					<a href="#" class="view-all">View All →</a>
+				</div>
+				
+				<div class="events-grid">
+					<div class="event-card">
+						<div class="event-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+							<span class="event-badge badge-popular">Popular</span>
+						</div>
+						<div class="event-body">
+							<h4 class="event-title">TechFest 2K24</h4>
+							<div class="event-info">
+								<i class="bi bi-calendar3"></i>
+								<span>20-22 May, 2024</span>
+							</div>
+							<div class="event-info">
+								<i class="bi bi-geo-alt-fill"></i>
+								<span>Main Auditorium</span>
+							</div>
+							<div class="event-footer">
+								<div class="event-participants">
+									<div class="participant-avatars">
+										<img src="https://i.pravatar.cc/28?img=1" alt="user">
+										<img src="https://i.pravatar.cc/28?img=2" alt="user">
+										<img src="https://i.pravatar.cc/28?img=3" alt="user">
+									</div>
+									<span class="registered-count">120+ Registered</span>
+								</div>
+								<div class="event-action">
+									<i class="bi bi-arrow-right"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="event-card">
+						<div class="event-image" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
+							<span class="event-badge badge-sports">Sports</span>
+						</div>
+						<div class="event-body">
+							<h4 class="event-title">Intra College Championship</h4>
+							<div class="event-info">
+								<i class="bi bi-calendar3"></i>
+								<span>25 May, 2024</span>
+							</div>
+							<div class="event-info">
+								<i class="bi bi-geo-alt-fill"></i>
+								<span>College Ground</span>
+							</div>
+							<div class="event-footer">
+								<div class="event-participants">
+									<div class="participant-avatars">
+										<img src="https://i.pravatar.cc/28?img=4" alt="user">
+										<img src="https://i.pravatar.cc/28?img=5" alt="user">
+										<img src="https://i.pravatar.cc/28?img=6" alt="user">
+									</div>
+									<span class="registered-count">80+ Registered</span>
+								</div>
+								<div class="event-action">
+									<i class="bi bi-arrow-right"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="event-card">
+						<div class="event-image" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+							<span class="event-badge badge-cultural">Cultural</span>
+						</div>
+						<div class="event-body">
+							<h4 class="event-title">Echoes '24</h4>
+							<div class="event-info">
+								<i class="bi bi-calendar3"></i>
+								<span>30 May, 2024</span>
+							</div>
+							<div class="event-info">
+								<i class="bi bi-geo-alt-fill"></i>
+								<span>Open Air Theatre</span>
+							</div>
+							<div class="event-footer">
+								<div class="event-participants">
+									<div class="participant-avatars">
+										<img src="https://i.pravatar.cc/28?img=7" alt="user">
+										<img src="https://i.pravatar.cc/28?img=8" alt="user">
+										<img src="https://i.pravatar.cc/28?img=9" alt="user">
+									</div>
+									<span class="registered-count">200+ Registered</span>
+								</div>
+								<div class="event-action">
+									<i class="bi bi-arrow-right"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<!-- FEATURES SECTION -->
+				<div class="features-section">
+					<div class="feature-card">
+						<div class="feature-icon">📋</div>
+						<h4>Easy Registration</h4>
+						<p>Register for events in just a few clicks.</p>
+					</div>
+					<div class="feature-card">
+						<div class="feature-icon">🔔</div>
+						<h4>Get Notified</h4>
+						<p>Stay updated about your events.</p>
+					</div>
+					<div class="feature-card">
+						<div class="feature-icon">🎟️</div>
+						<h4>Digital Tickets</h4>
+						<p>Access your tickets anytime, anywhere.</p>
+					</div>
+					<div class="feature-card">
+						<div class="feature-icon">🏆</div>
+						<h4>Certificates</h4>
+						<p>Earn and download event certificates.</p>
+					</div>
+				</div>
+			
+		</div>
+			
+		</div>
+	
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-page="reports">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports | CampusX Admin</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <link rel="stylesheet" href="admin-styles.css" />
+</head>
+<body>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <a href="../index.html" class="brand" style="color: white;"><strong>CampusX</strong> Admin</a>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+    </div>
+    <ul class="admin-nav-list">
+      <li><a href="admin-dashboard.html" class="nav-item" data-page="admin-dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+      <li><a href="manage-students.html" class="nav-item" data-page="manage-students"><span class="nav-icon">👥</span> Students</a></li>
+      <li><a href="manage-organizers.html" class="nav-item" data-page="manage-organizers"><span class="nav-icon">👔</span> Organizers</a></li>
+      <li><a href="manage-events.html" class="nav-item" data-page="manage-events"><span class="nav-icon">📅</span> Events</a></li>
+      <li><a href="manage-categories.html" class="nav-item" data-page="manage-categories"><span class="nav-icon">🏷️</span> Categories</a></li>
+      <li><a href="manage-registrations.html" class="nav-item" data-page="manage-registrations"><span class="nav-icon">📝</span> Registrations</a></li>
+      <li><a href="manage-attendance.html" class="nav-item" data-page="manage-attendance"><span class="nav-icon">✅</span> Attendance</a></li>
+      <li><a href="manage-certificates.html" class="nav-item" data-page="manage-certificates"><span class="nav-icon">🎓</span> Certificates</a></li>
+      <li><a href="reports.html" class="nav-item active" data-page="reports"><span class="nav-icon">📋</span> Reports</a></li>
+      <li><a href="admin-profile.html" class="nav-item" data-page="admin-profile"><span class="nav-icon">⚙️</span> Profile</a></li>
+      <li><a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Reports</h1>
+      <p class="section-subtitle">Generate analytics and export reports</p>
+    </header>
+
+    <section class="form-section">
+      <h3>Event Report</h3>
+      <button class="search-button" onclick="exportEventReport()" style="margin-bottom: 2rem;">Export Events Report (CSV)</button>
+      <div class="table-wrapper" style="margin-bottom: 3rem;">
+        <table class="data-table">
+          <thead><tr><th>Event</th><th>Registrations</th><th>Attendance</th><th>Status</th></tr></thead>
+          <tbody id="eventReportTable"><tr><td colspan="4" class="text-center">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <h3>Student Report</h3>
+      <button class="search-button" onclick="exportStudentReport()" style="margin-bottom: 2rem;">Export Students Report (CSV)</button>
+      <div class="table-wrapper" style="margin-bottom: 3rem;">
+        <table class="data-table">
+          <thead><tr><th>Student</th><th>Events Registered</th><th>Attendance Rate</th><th>Certificates</th></tr></thead>
+          <tbody id="studentReportTable"><tr><td colspan="4" class="text-center">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <h3>Organizer Report</h3>
+      <button class="search-button" onclick="exportOrganizerReport()" style="margin-bottom: 2rem;">Export Organizers Report (CSV)</button>
+      <div class="table-wrapper" style="margin-bottom: 3rem;">
+        <table class="data-table">
+          <thead><tr><th>Organizer</th><th>Events Created</th><th>Total Registrations</th><th>Status</th></tr></thead>
+          <tbody id="organizerReportTable"><tr><td colspan="4" class="text-center">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <h3>Category Report</h3>
+      <button class="search-button" onclick="exportCategoryReport()" style="margin-bottom: 2rem;">Export Categories Report (CSV)</button>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Category</th><th>Total Events</th><th>Total Registrations</th></tr></thead>
+          <tbody id="categoryReportTable"><tr><td colspan="3" class="text-center">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../assets/scripts.js"></script>
+  <script src="admin-scripts.js"></script>
+  <script>
+    const exportCSV = (filename, data, headers) => {
+      let csv = headers.join(',') + '\n';
+      csv += data.map(row => headers.map(h => `"${row[h] || ''}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+    };
+
+    window.exportEventReport = async () => {
+      try {
+        const data = await window.adminAPI.fetchAdmin('/admin/reports/events');
+        exportCSV('event-report.csv', data, ['title', 'total_registrations', 'attended_count', 'attendance_percentage', 'status']);
+        window.adminAPI.showToast('Event report exported', 'success');
+      } catch (error) {
+        window.adminAPI.showToast('Export failed: ' + error.message, 'error');
+      }
+    };
+
+    window.exportStudentReport = async () => {
+      try {
+        const data = await window.adminAPI.fetchAdmin('/admin/reports/students');
+        exportCSV('student-report.csv', data, ['full_name', 'roll_number', 'events_registered', 'events_attended', 'certificates_earned']);
+        window.adminAPI.showToast('Student report exported', 'success');
+      } catch (error) {
+        window.adminAPI.showToast('Export failed: ' + error.message, 'error');
+      }
+    };
+
+    window.exportOrganizerReport = async () => {
+      try {
+        const data = await window.adminAPI.fetchAdmin('/admin/reports/organizers');
+        exportCSV('organizer-report.csv', data, ['full_name', 'events_created', 'total_registrations', 'status']);
+        window.adminAPI.showToast('Organizer report exported', 'success');
+      } catch (error) {
+        window.adminAPI.showToast('Export failed: ' + error.message, 'error');
+      }
+    };
+
+    window.exportCategoryReport = async () => {
+      try {
+        const data = await window.adminAPI.fetchAdmin('/admin/reports/categories');
+        exportCSV('category-report.csv', data, ['category_name', 'events_count', 'total_registrations']);
+        window.adminAPI.showToast('Category report exported', 'success');
+      } catch (error) {
+        window.adminAPI.showToast('Export failed: ' + error.message, 'error');
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const loadReports = async () => {
+        try {
+          const eventReport = await window.adminAPI.fetchAdmin('/admin/reports/events');
+          const studentReport = await window.adminAPI.fetchAdmin('/admin/reports/students');
+          const organizerReport = await window.adminAPI.fetchAdmin('/admin/reports/organizers');
+          const categoryReport = await window.adminAPI.fetchAdmin('/admin/reports/categories');
+
+          const esc = (value) => {
+            const div = document.createElement('div');
+            div.textContent = value == null ? '' : value;
+            return div.innerHTML;
+          };
+          const percent = (value) => (value == null ? '0%' : `${value}%`);
+          const empty = (cols) => `<tr><td colspan="${cols}" class="text-center">No data yet</td></tr>`;
+
+          document.getElementById('eventReportTable').innerHTML = eventReport.length
+            ? eventReport.map(e => `<tr><td>${esc(e.title)}</td><td>${e.total_registrations}</td><td>${e.attended_count} (${percent(e.attendance_percentage)})</td><td>${esc(e.status)}</td></tr>`).join('')
+            : empty(4);
+          document.getElementById('studentReportTable').innerHTML = studentReport.length
+            ? studentReport.map(s => {
+                const rate = Number(s.events_registered) ? Math.round((Number(s.events_attended) / Number(s.events_registered)) * 100) : 0;
+                return `<tr><td>${esc(s.full_name)}</td><td>${s.events_registered}</td><td>${rate}%</td><td>${s.certificates_earned}</td></tr>`;
+              }).join('')
+            : empty(4);
+          document.getElementById('organizerReportTable').innerHTML = organizerReport.length
+            ? organizerReport.map(o => `<tr><td>${esc(o.full_name)}</td><td>${o.events_created}</td><td>${o.total_registrations}</td><td>${esc(o.status)}</td></tr>`).join('')
+            : empty(4);
+          document.getElementById('categoryReportTable').innerHTML = categoryReport.length
+            ? categoryReport.map(c => `<tr><td>${esc(c.category_name)}</td><td>${c.events_count}</td><td>${c.total_registrations}</td></tr>`).join('')
+            : empty(3);
+        } catch (error) {
+          window.adminAPI.showToast('Failed to load reports: ' + error.message, 'error');
+        }
+      };
+
+      loadReports();
+    });
+  </script>
+</body>
+</html>
